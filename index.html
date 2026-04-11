@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>READABLE</title>
+    
+    <link rel="icon" href="image_114.png">
+    <link rel="apple-touch-icon" href="image_114.png">
+
+    <style>
+        :root {
+            --main: #333;
+            --bg: #fff;
+            --accent: #eee;
+            --input-bg: #fafafa;
+            --radius: 15px;
+            --text-gray: #666;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header { margin-bottom: 20px; }
+        h1 { font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        .subtitle { font-size: 0.85rem; color: var(--text-gray); font-weight: 600; margin-top: 4px; }
+
+        /* 入力エリア */
+        .input-card {
+            background: var(--input-bg);
+            padding: 15px;
+            border-radius: var(--radius);
+            border: 2px solid var(--accent);
+            margin-bottom: 20px;
+        }
+        .label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-gray);
+            margin-bottom: 8px;
+            display: block;
+            text-align: left;
+            text-transform: uppercase;
+        }
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+        input {
+            width: 100%;
+            padding: 15px;
+            padding-right: 45px;
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            background: #fff;
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--main) !important;
+            box-sizing: border-box;
+            outline: none;
+            -webkit-appearance: none;
+            -webkit-text-fill-color: var(--main) !important;
+            opacity: 1 !important;
+            user-select: text;
+        }
+
+        .clr-btn {
+            position: absolute;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: rgba(0,0,0,0.05);
+            border: none;
+            border-radius: 50%;
+            color: #888;
+            font-size: 1.2rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .clr-btn.active { display: flex; }
+
+        /* プレビューボード */
+        .preview-board {
+            width: 100%;
+            height: 180px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            transition: background-color 0.2s;
+            border: 2px solid var(--accent);
+            position: relative;
+            overflow: hidden;
+        }
+        .preview-text { font-size: 1.4rem; font-weight: 900; position: relative; }
+        .recommend-badge {
+            font-size: 0.6rem;
+            background: #4caf50;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            position: absolute;
+            right: -70px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+        }
+        .recommend-badge.active { display: block; }
+
+        /* 色覚シミュレーション */
+        .simulation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .sim-card {
+            padding: 10px 5px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .sim-label { color: var(--text-gray); font-size: 0.6rem; margin-bottom: 4px; }
+
+        .footer-btns { display: flex; gap: 10px; margin-bottom: 20px; }
+        .kofi-btn {
+            flex: 6; background: var(--main); color: #fff;
+            padding: 12px; border-radius: var(--radius);
+            text-decoration: none; font-weight: bold; font-size: 13px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .home-btn {
+            flex: 4; background: var(--accent); color: var(--main);
+            border: none; padding: 12px;
+            border-radius: var(--radius); font-weight: 800; font-size: 12px; 
+            cursor: pointer;
+        }
+
+        footer { font-size: 10px; color: #aaa; line-height: 1.6; font-weight: 500; padding-bottom: 10px; }
+        footer a { color: inherit; text-decoration: underline; }
+
+        #modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 100;
+        }
+        .modal-content {
+            background: #fff; width: 85%; max-width: 340px; padding: 30px;
+            border-radius: var(--radius); text-align: left; position: relative;
+        }
+        .close-x { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #888; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>READABLE</h1>
+        <p class="subtitle">Contrast check & Color blind preview.</p>
+    </header>
+
+    <div class="input-card">
+        <label class="label">Background Color (HEX)</label>
+        <div class="input-wrapper">
+            <input type="text" id="hexInput" placeholder="#007AFF" maxlength="7" oninput="updateUI()">
+            <button class="clr-btn" id="clrBtn" onclick="clearInput()">×</button>
+        </div>
+    </div>
+
+    <div class="preview-board" id="board">
+        <div class="preview-text" id="textBlack" style="color: #000;">
+            BLACK TEXT <span class="recommend-badge" id="badgeBlack">OK</span>
+        </div>
+        <div class="preview-text" id="textWhite" style="color: #fff;">
+            WHITE TEXT <span class="recommend-badge" id="badgeWhite">OK</span>
+        </div>
+    </div>
+
+    <div class="sim-label">COLOR BLIND PREVIEW</div>
+    <div class="simulation-grid">
+        <div class="sim-card" id="simP"><span style="color:#000">TEXT</span><span style="color:#fff">TEXT</span>P-type</div>
+        <div class="sim-card" id="simD"><span style="color:#000">TEXT</span><span style="color:#fff">TEXT</span>D-type</div>
+        <div class="sim-card" id="simT"><span style="color:#000">TEXT</span><span style="color:#fff">TEXT</span>T-type</div>
+    </div>
+
+    <div class="footer-btns">
+        <a href="https://ko-fi.com/afrorakda" target="_blank" class="kofi-btn">☕️buy me a coffee</a>
+        <button class="home-btn" onclick="showModal()">Add Home</button>
+    </div>
+
+    <footer>
+        <div>No login / No tracking / No ads / Browser only</div>
+        <div><a href="https://afrorakda.com/privacy/">Privacy Policy</a> / afrorakda © 2026</div>
+    </footer>
+</div>
+
+<div id="modal" onclick="hideModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-x" onclick="hideModal()">×</span>
+        <h3>📱 Install</h3>
+        <p>Add to your home screen.</p>
+        <p>🍏 <strong>iPhone (Safari):</strong><br>Tap Share, then Add to Home Screen.</p>
+        <p>🤖 <strong>Android (Chrome):</strong><br>Tap Menu (⋮), then Add to Home Screen.</p>
+    </div>
+</div>
+
+<script>
+    const hexInput = document.getElementById('hexInput');
+    const clrBtn = document.getElementById('clrBtn');
+    const board = document.getElementById('board');
+    const badgeBlack = document.getElementById('badgeBlack');
+    const badgeWhite = document.getElementById('badgeWhite');
+
+    function clearInput() {
+        hexInput.value = '';
+        updateUI();
+        hexInput.focus();
+    }
+
+    function updateUI() {
+        let hex = hexInput.value.trim();
+        if (!hex.startsWith('#')) hex = '#' + hex;
+        clrBtn.classList.toggle('active', hexInput.value !== '');
+
+        if (/^#[0-9A-F]{6}$/i.test(hex)) {
+            board.style.backgroundColor = hex;
+            const rgb = hexToRgb(hex);
+            const luminance = calcLuminance(rgb.r, rgb.g, rgb.b);
+
+            // 輝度0.5を境に判定（WCAG基準ではなく直感的な読みやすさ）
+            const isDark = luminance < 0.5;
+            badgeBlack.classList.toggle('active', !isDark);
+            badgeWhite.classList.toggle('active', isDark);
+
+            // シミュレーション
+            updateSimulation(rgb);
+        } else {
+            board.style.backgroundColor = '#fafafa';
+            badgeBlack.classList.remove('active');
+            badgeWhite.classList.remove('active');
+        }
+    }
+
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 255, g: 255, b: 255 };
+    }
+
+    function calcLuminance(r, g, b) {
+        const a = [r, g, b].map(v => {
+            v /= 255;
+            return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+        });
+        return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
+    }
+
+    function updateSimulation(rgb) {
+        const sims = {
+            simP: simulateColor(rgb, 'protanopia'),
+            simD: simulateColor(rgb, 'deuteranopia'),
+            simT: simulateColor(rgb, 'tritanopia')
+        };
+
+        for (const [id, color] of Object.entries(sims)) {
+            document.getElementById(id).style.backgroundColor = color;
+        }
+    }
+
+    // 色覚シミュレーション用の簡易変換マトリックス
+    function simulateColor(rgb, type) {
+        let r = rgb.r, g = rgb.g, b = rgb.b;
+        if (type === 'protanopia') {
+            r = 0.56667 * rgb.r + 0.43333 * rgb.g;
+            g = 0.55833 * rgb.r + 0.44167 * rgb.g;
+            b = 0.24167 * rgb.g + 0.75833 * rgb.b;
+        } else if (type === 'deuteranopia') {
+            r = 0.625 * rgb.r + 0.375 * rgb.g;
+            g = 0.7 * rgb.r + 0.3 * rgb.g;
+            b = 0.3 * rgb.g + 0.7 * rgb.b;
+        } else if (type === 'tritanopia') {
+            r = 0.95 * rgb.r + 0.05 * rgb.g;
+            g = 0.43333 * rgb.g + 0.56667 * rgb.b;
+            b = 0.475 * rgb.g + 0.525 * rgb.b;
+        }
+        return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+    }
+
+    function showModal() { document.getElementById('modal').style.display = 'flex'; }
+    function hideModal() { document.getElementById('modal').style.display = 'none'; }
+    
+    // 初期表示
+    updateUI();
+</script>
+
+</body>
+</html>
