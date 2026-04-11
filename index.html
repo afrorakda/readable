@@ -43,22 +43,22 @@
             flex-direction: column;
         }
 
-        header { margin-bottom: 15px; }
+        header { margin-bottom: 10px; }
         h1 { font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
         .subtitle { font-size: 0.85rem; color: var(--text-gray); font-weight: 600; margin-top: 4px; }
 
         .input-card {
             background: var(--input-bg);
-            padding: 15px;
+            padding: 12px;
             border-radius: var(--radius);
             border: 2px solid var(--accent);
             margin-bottom: 15px;
         }
         .label {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 800;
             color: var(--text-gray);
-            margin-bottom: 6px;
+            margin-bottom: 5px;
             display: block;
             text-align: left;
             text-transform: uppercase;
@@ -104,7 +104,7 @@
         /* メインプレビュー */
         .preview-board {
             width: 100%;
-            height: 160px;
+            height: 150px;
             border-radius: var(--radius);
             margin-bottom: 15px;
             display: flex;
@@ -113,38 +113,58 @@
             align-items: center;
             gap: 10px;
             border: 2px solid var(--accent);
-            transition: background-color 0.2s;
+            cursor: pointer;
+            transition: transform 0.1s, background-color 0.2s;
+            position: relative;
         }
-        .preview-text { font-weight: 900; transition: all 0.2s; position: relative; }
-        .preview-text.small { font-size: 0.9rem; opacity: 0.6; }
+        .preview-board:active { transform: scale(0.98); }
+        
+        .copy-hint {
+            position: absolute;
+            bottom: 8px;
+            font-size: 0.6rem;
+            font-weight: 800;
+            opacity: 0.4;
+            letter-spacing: 1px;
+        }
+
+        .preview-text { font-weight: 900; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
+        .preview-text.small { font-size: 0.9rem; opacity: 0.4; }
         .preview-text.large { font-size: 1.6rem; opacity: 1; }
-        .check-mark { display: none; margin-left: 5px; }
-        .preview-text.large .check-mark { display: inline; }
+
+        /* アウトライン付きチェックマーク */
+        .check {
+            display: none;
+            font-size: 1.2rem;
+            filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff);
+        }
+        .preview-text.large .check { display: inline; }
+        .preview-text[style*="color: #fff"] .check { filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000); }
 
         /* 色覚プレビュー */
-        .sim-label { color: #444; font-size: 0.85rem; font-weight: 900; margin-bottom: 10px; text-align: left; margin-left: 5px; }
+        .sim-label { color: #444; font-size: 0.85rem; font-weight: 900; margin-bottom: 8px; text-align: left; margin-left: 5px; }
         .simulation-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
+            gap: 8px;
             flex-grow: 1;
             margin-bottom: 15px;
         }
         .sim-card {
-            padding: 15px 5px;
+            padding: 12px 2px;
             border-radius: 12px;
             font-weight: 800;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 8px;
+            gap: 5px;
             border: 1px solid var(--accent);
         }
-        .sim-text { font-size: 0.9rem; font-weight: 900; }
-        .sim-text.large { font-size: 1.2rem; }
-        .sim-type { color: var(--text-gray); font-size: 0.6rem; margin-top: 5px; }
+        .sim-text { font-weight: 900; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 2px; }
+        .sim-text.large { font-size: 1.1rem; }
+        .sim-type { color: var(--text-gray); font-size: 0.6rem; margin-top: 3px; font-weight: 800; }
 
-        .footer-btns { display: flex; gap: 10px; margin-bottom: 15px; }
+        .footer-btns { display: flex; gap: 10px; margin-bottom: 10px; }
         .kofi-btn {
             flex: 6; background: var(--main); color: #fff;
             padding: 12px; border-radius: var(--radius);
@@ -158,7 +178,7 @@
             cursor: pointer;
         }
 
-        footer { font-size: 10px; color: #aaa; line-height: 1.6; font-weight: 500; padding-bottom: 10px; }
+        footer { font-size: 10px; color: #aaa; line-height: 1.6; font-weight: 500; padding-bottom: 5px; }
         footer a { color: inherit; text-decoration: underline; }
 
         #modal {
@@ -188,26 +208,27 @@
         </div>
     </div>
 
-    <div class="preview-board" id="board">
-        <div class="preview-text" id="textBlack" style="color: #000;">BLACK<span class="check-mark">✅</span></div>
-        <div class="preview-text" id="textWhite" style="color: #fff;">WHITE<span class="check-mark">✅</span></div>
+    <div class="preview-board" id="board" onclick="copyHex()">
+        <div class="preview-text" id="textBlack" style="color: #000;">BLACK <span class="check">✅</span></div>
+        <div class="preview-text" id="textWhite" style="color: #fff;">WHITE <span class="check">✅</span></div>
+        <div class="copy-hint" id="copyHint">TAP TO COPY HEX</div>
     </div>
 
     <div class="sim-label">COLOR BLIND PREVIEW</div>
     <div class="simulation-grid">
         <div class="sim-card" id="simP">
-            <span class="sim-text p-black" style="color:#000">T</span>
-            <span class="sim-text p-white" style="color:#fff">T</span>
+            <span class="sim-text p-black" style="color:#000">BLACK</span>
+            <span class="sim-text p-white" style="color:#fff">WHITE</span>
             <div class="sim-type">P-type</div>
         </div>
         <div class="sim-card" id="simD">
-            <span class="sim-text d-black" style="color:#000">T</span>
-            <span class="sim-text d-white" style="color:#fff">T</span>
+            <span class="sim-text d-black" style="color:#000">BLACK</span>
+            <span class="sim-text d-white" style="color:#fff">WHITE</span>
             <div class="sim-type">D-type</div>
         </div>
         <div class="sim-card" id="simT">
-            <span class="sim-text t-black" style="color:#000">T</span>
-            <span class="sim-text t-white" style="color:#fff">T</span>
+            <span class="sim-text t-black" style="color:#000">BLACK</span>
+            <span class="sim-text t-white" style="color:#fff">WHITE</span>
             <div class="sim-type">T-type</div>
         </div>
     </div>
@@ -239,6 +260,9 @@
     const board = document.getElementById('board');
     const textBlack = document.getElementById('textBlack');
     const textWhite = document.getElementById('textWhite');
+    const copyHint = document.getElementById('copyHint');
+
+    let currentValidHex = "";
 
     function clearInput() {
         hexInput.value = '';
@@ -248,36 +272,31 @@
 
     function updateUI() {
         let val = hexInput.value.trim();
-        if (!val) {
-            resetUI();
-            return;
-        }
+        if (!val) { resetUI(); return; }
 
-        // 柔軟なHEX解釈
         if (!val.startsWith('#')) val = '#' + val;
-        if (val.length === 4) { // #abc -> #aabbcc
+        if (val.length === 4) {
             val = '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
         }
         
         clrBtn.classList.toggle('active', hexInput.value !== '');
 
         if (/^#[0-9A-F]{6}$/i.test(val)) {
+            currentValidHex = val.toUpperCase();
             board.style.backgroundColor = val;
             const rgb = hexToRgb(val);
             const luminance = calcLuminance(rgb.r, rgb.g, rgb.b);
-
-            // 輝度0.5を境に判定
             const isDark = luminance < 0.5;
             
-            // UIの強調切り替え
             if (isDark) {
                 textWhite.className = "preview-text large";
                 textBlack.className = "preview-text small";
+                copyHint.style.color = "#fff";
             } else {
                 textWhite.className = "preview-text small";
                 textBlack.className = "preview-text large";
+                copyHint.style.color = "#000";
             }
-
             updateSimulation(rgb, isDark);
         } else {
             resetUI();
@@ -288,7 +307,19 @@
         board.style.backgroundColor = '#fafafa';
         textWhite.className = "preview-text small";
         textBlack.className = "preview-text small";
+        copyHint.style.color = "var(--text-gray)";
+        currentValidHex = "";
         clrBtn.classList.toggle('active', hexInput.value !== '');
+    }
+
+    async function copyHex() {
+        if (!currentValidHex) return;
+        try {
+            await navigator.clipboard.writeText(currentValidHex);
+            const original = copyHint.innerText;
+            copyHint.innerText = "COPIED!";
+            setTimeout(() => { copyHint.innerText = original; }, 1000);
+        } catch (err) {}
     }
 
     function hexToRgb(hex) {
@@ -316,20 +347,19 @@
         for (const [id, color] of Object.entries(types)) {
             const el = document.getElementById(id);
             el.style.backgroundColor = color;
-            
             const blackTxt = el.querySelector('.sim-text[style*="color:#000"]');
             const whiteTxt = el.querySelector('.sim-text[style*="color:#fff"]');
             
             if (isDark) {
                 whiteTxt.classList.add('large');
                 blackTxt.classList.remove('large');
-                whiteTxt.innerText = "TEXT ✅";
-                blackTxt.innerText = "TEXT";
+                whiteTxt.innerHTML = "WHITE ✅";
+                blackTxt.innerText = "BLACK";
             } else {
                 whiteTxt.classList.remove('large');
                 blackTxt.classList.add('large');
-                whiteTxt.innerText = "TEXT";
-                blackTxt.innerText = "TEXT ✅";
+                whiteTxt.innerText = "WHITE";
+                blackTxt.innerHTML = "BLACK ✅";
             }
         }
     }
