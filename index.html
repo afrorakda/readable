@@ -333,31 +333,24 @@
         return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
     }
 
-    // 鉄壁のシミュレーションロジック
-    function simulateColor(rgb, type) {
-        // ガンマ補正を解除して線形空間へ
-        let r = Math.pow(rgb.r / 255, 2.2);
-        let g = Math.pow(rgb.g / 255, 2.2);
-        let b = Math.pow(rgb.b / 255, 2.2);
-
+    // 安定性を追求したsRGB空間シミュレーション
+    function simulateColor(r, g, b, type) {
         let sr, sg, sb;
         if (type === 'protanopia') {
-            sr = 0.56667 * r + 0.43333 * g;
-            sg = 0.55833 * r + 0.44167 * g;
-            sb = 0.24167 * g + 0.75833 * b;
+            sr = 0.56667 * r + 0.43333 * g + 0.00000 * b;
+            sg = 0.55833 * r + 0.44167 * g + 0.00000 * b;
+            sb = 0.00000 * r + 0.24167 * g + 0.75833 * b;
         } else if (type === 'deuteranopia') {
-            sr = 0.625 * r + 0.375 * g;
-            sg = 0.7 * r + 0.3 * g;
-            sb = 0.3 * g + 0.7 * b;
+            sr = 0.62500 * r + 0.37500 * g + 0.00000 * b;
+            sg = 0.70000 * r + 0.30000 * g + 0.00000 * b;
+            sb = 0.00000 * r + 0.30000 * g + 0.70000 * b;
         } else if (type === 'tritanopia') {
-            sr = 0.95 * r + 0.05 * g;
-            sg = 0.43333 * g + 0.56667 * b;
-            sb = 0.475 * g + 0.525 * b;
+            sr = 0.95000 * r + 0.05000 * g + 0.00000 * b;
+            sg = 0.00000 * r + 0.43333 * g + 0.56667 * b;
+            sb = 0.00000 * r + 0.47500 * g + 0.52500 * b;
         }
-
-        // ガンマ補正を再適用してsRGBへ戻し、0-255にクランプ
-        const clamp = (v) => Math.max(0, Math.min(255, Math.pow(v, 1/2.2) * 255));
-        return `rgb(${Math.round(clamp(sr))}, ${Math.round(clamp(sg))}, ${Math.round(clamp(sb))})`;
+        const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
+        return `rgb(${clamp(sr)}, ${clamp(sg)}, ${clamp(sb)})`;
     }
 
     function updateSimulation(rgb, isDark) {
@@ -366,8 +359,8 @@
 
         types.forEach((type, i) => {
             const el = document.getElementById(ids[i]);
-            const color = simulateColor(rgb, type);
-            el.style.backgroundColor = color;
+            const colorString = simulateColor(rgb.r, rgb.g, rgb.b, type);
+            el.style.backgroundColor = colorString;
             const bTxt = el.querySelector('[class$="black"]');
             const wTxt = el.querySelector('[class$="white"]');
             if (isDark) {
