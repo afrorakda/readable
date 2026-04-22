@@ -18,23 +18,22 @@
             --text-gray: #666;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg);
             color: var(--main);
-            margin: 0;
             display: flex;
             justify-content: center;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
+            padding: env(safe-area-inset-top, 15px) 15px env(safe-area-inset-bottom, 15px) 15px;
         }
 
         .container {
             width: 100%;
             max-width: 420px;
-            padding: 20px;
             display: flex;
             flex-direction: column;
         }
@@ -43,7 +42,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
         }
 
         h1 { font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -1.5px; }
@@ -58,15 +57,14 @@
             border-radius: 12px;
         }
 
-        .subtitle { font-size: 0.85rem; color: var(--text-gray); font-weight: 700; margin-bottom: 15px; text-align: left; }
+        .subtitle { font-size: 0.85rem; color: var(--text-gray); font-weight: 700; margin-bottom: 12px; text-align: left; }
 
-        /* 入力エリア */
         .input-card {
             background: var(--input-bg);
             padding: 15px;
             border-radius: var(--radius);
             border: 2px solid var(--accent);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .label {
@@ -96,36 +94,26 @@
             -webkit-text-fill-color: var(--main) !important;
             opacity: 1 !important;
         }
+        /* 透かし（Placeholder）の色を#bbbに修正 */
+        input::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; }
 
         .clr-btn {
-            position: absolute;
-            right: 10px;
-            width: 30px;
-            height: 30px;
-            background: var(--accent);
-            border: none;
-            border-radius: 50%;
-            color: var(--main);
-            font-size: 1rem;
-            font-weight: 800;
-            cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
+            position: absolute; right: 10px; width: 32px; height: 32px; background: #ccc;
+            border: none; border-radius: 50%; color: #fff; font-size: 1.2rem; font-weight: 900;
+            cursor: pointer; display: none; align-items: center; justify-content: center;
         }
         .clr-btn.active { display: flex; }
 
-        /* プレビューボード */
         .preview-board {
             width: 100%;
             height: 140px;
             border-radius: var(--radius);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            gap: 10px;
+            gap: 5px;
             border: 2px solid var(--accent);
             cursor: pointer;
             position: relative;
@@ -134,61 +122,41 @@
         .preview-board:active { transform: scale(0.98); }
         
         .copy-hint {
-            position: absolute;
-            bottom: 10px;
-            font-size: 0.6rem;
-            font-weight: 900;
-            opacity: 0.5;
-            letter-spacing: 1px;
+            position: absolute; bottom: 8px; font-size: 0.6rem; font-weight: 900;
+            opacity: 0.4; letter-spacing: 1px;
         }
 
-        .preview-text { font-weight: 900; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
-        .preview-text.small { font-size: 0.9rem; opacity: 0.3; }
-        .preview-text.large { font-size: 1.8rem; opacity: 1; }
+        .preview-text { font-weight: 900; transition: all 0.2s; }
+        .preview-text.small { font-size: 0.85rem; opacity: 0.1; } /* 不合格側を極限まで薄く */
+        .preview-text.large { font-size: 2rem; opacity: 1; letter-spacing: -1px; }
 
-        /* シミュレーション */
-        .sim-label { font-size: 0.8rem; font-weight: 900; color: var(--main); margin-bottom: 10px; text-align: left; }
+        .sim-label { font-size: 0.8rem; font-weight: 900; color: var(--main); margin-bottom: 8px; text-align: left; }
         .simulation-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 20px;
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px;
         }
         .sim-card {
-            padding: 15px 5px;
-            border-radius: var(--radius);
-            font-weight: 800;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 5px;
-            border: 2px solid var(--accent);
+            padding: 15px 2px; border-radius: var(--radius); font-weight: 800;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            gap: 4px; border: 2px solid var(--accent);
         }
-        .sim-text { font-weight: 900; font-size: 0.7rem; }
-        .sim-text.active { font-size: 1rem; }
-        .sim-type { color: var(--text-gray); font-size: 0.6rem; margin-top: 5px; font-weight: 900; }
+        .sim-text { font-weight: 900; font-size: 0.65rem; transition: all 0.2s; }
+        .sim-text.active { font-size: 0.9rem; }
+        .sim-type { color: var(--text-gray); font-size: 0.55rem; margin-top: 4px; font-weight: 900; }
 
-        /* フッターボタン */
-        .footer-btns { display: flex; gap: 10px; margin-bottom: 15px; }
+        .footer-btns { display: flex; gap: 8px; margin-bottom: 10px; }
         .kofi-btn {
-            flex: 1; background: var(--main); color: #fff;
-            height: 50px; border-radius: var(--radius);
-            text-decoration: none; font-weight: 900; font-size: 0.85rem;
-            display: flex; align-items: center; justify-content: center;
-            -webkit-text-fill-color: #fff;
+            flex: 1; background: var(--main); color: #fff; height: 50px; border-radius: var(--radius);
+            text-decoration: none; font-weight: 900; font-size: 0.85rem; display: flex;
+            align-items: center; justify-content: center; -webkit-text-fill-color: #fff;
         }
         .home-btn {
-            flex: 1; background: var(--accent); color: var(--main);
-            border: none; height: 50px;
-            border-radius: var(--radius); font-weight: 900; font-size: 0.85rem; 
-            cursor: pointer;
+            flex: 1; background: var(--accent); color: var(--main); border: none; height: 50px;
+            border-radius: var(--radius); font-weight: 900; font-size: 0.85rem; cursor: pointer;
         }
 
-        footer { text-align: center; font-size: 0.7rem; color: #999; line-height: 1.5; font-weight: 700; padding-bottom: 10px; }
+        footer { text-align: center; font-size: 0.7rem; color: #999; line-height: 1.5; font-weight: 700; }
         footer a { color: inherit; text-decoration: underline; }
 
-        /* モーダル */
         #modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000;
@@ -284,13 +252,11 @@
     function updateUI() {
         let val = hexInput.value.trim().replace(/\s/g, '');
         if (!val) { resetUI(); return; }
-
         if (!val.startsWith('#')) val = '#' + val;
         
-        clrBtn.classList.toggle('active', hexInput.value !== '');
+        clrBtn.style.display = hexInput.value !== '' ? 'flex' : 'none';
 
         if (/^#([0-9A-F]{3}){1,2}$/i.test(val)) {
-            // 3桁HEXを6桁に変換
             if (val.length === 4) {
                 val = '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
             }
@@ -327,16 +293,16 @@
         textBlack.innerHTML = "BLACK";
         copyHint.style.color = "var(--text-gray)";
         currentValidHex = "";
-        clrBtn.classList.toggle('active', hexInput.value !== '');
+        clrBtn.style.display = hexInput.value !== '' ? 'flex' : 'none';
     }
 
     async function copyHex() {
         if (!currentValidHex) return;
         try {
             await navigator.clipboard.writeText(currentValidHex);
-            const original = copyHint.innerText;
+            const original = "TAP TO COPY HEX";
             copyHint.innerText = "COPIED!";
-            setTimeout(() => { copyHint.innerText = original; }, 1000);
+            setTimeout(() => { copyHint.innerText = original; }, 800);
         } catch (err) {}
     }
 
@@ -361,23 +327,19 @@
             simD: simulateColor(rgb, 'deuteranopia'),
             simT: simulateColor(rgb, 'tritanopia')
         };
-
         for (const [id, color] of Object.entries(types)) {
             const el = document.getElementById(id);
             el.style.backgroundColor = color;
             const bTxt = el.querySelector('[class$="black"]');
             const wTxt = el.querySelector('[class$="white"]');
-            
             if (isDark) {
-                wTxt.classList.add('active');
-                bTxt.classList.remove('active');
-                wTxt.innerHTML = "WHITE ✅";
-                bTxt.innerText = "BLACK";
+                wTxt.classList.add('active'); bTxt.classList.remove('active');
+                wTxt.innerHTML = "WHITE ✅"; bTxt.innerText = "BLACK";
+                wTxt.style.opacity = "1"; bTxt.style.opacity = "0.2";
             } else {
-                wTxt.classList.remove('active');
-                bTxt.classList.add('active');
-                wTxt.innerText = "WHITE";
-                bTxt.innerHTML = "BLACK ✅";
+                wTxt.classList.remove('active'); bTxt.classList.add('active');
+                wTxt.innerText = "WHITE"; bTxt.innerHTML = "BLACK ✅";
+                wTxt.style.opacity = "0.2"; bTxt.style.opacity = "1";
             }
         }
     }
