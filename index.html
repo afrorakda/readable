@@ -36,7 +36,7 @@
             max-width: 420px;
             display: flex;
             flex-direction: column;
-            gap: 15px; /* 要素間のゆとり */
+            gap: 15px;
         }
 
         header {
@@ -101,7 +101,6 @@
         }
         .clr-btn.active { display: flex; }
 
-        /* メインプレビューを大型化 */
         .preview-board {
             width: 100%;
             height: 200px;
@@ -129,7 +128,6 @@
 
         .sim-label { font-size: 0.85rem; font-weight: 900; color: var(--main); margin-top: 5px; }
 
-        /* 色覚窓を縦積み大型化 */
         .simulation-stack {
             display: flex;
             flex-direction: column;
@@ -335,14 +333,40 @@
         return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
     }
 
+    // 鉄壁のシミュレーションロジック
+    function simulateColor(rgb, type) {
+        // ガンマ補正を解除して線形空間へ
+        let r = Math.pow(rgb.r / 255, 2.2);
+        let g = Math.pow(rgb.g / 255, 2.2);
+        let b = Math.pow(rgb.b / 255, 2.2);
+
+        let sr, sg, sb;
+        if (type === 'protanopia') {
+            sr = 0.56667 * r + 0.43333 * g;
+            sg = 0.55833 * r + 0.44167 * g;
+            sb = 0.24167 * g + 0.75833 * b;
+        } else if (type === 'deuteranopia') {
+            sr = 0.625 * r + 0.375 * g;
+            sg = 0.7 * r + 0.3 * g;
+            sb = 0.3 * g + 0.7 * b;
+        } else if (type === 'tritanopia') {
+            sr = 0.95 * r + 0.05 * g;
+            sg = 0.43333 * g + 0.56667 * b;
+            sb = 0.475 * g + 0.525 * b;
+        }
+
+        // ガンマ補正を再適用してsRGBへ戻し、0-255にクランプ
+        const clamp = (v) => Math.max(0, Math.min(255, Math.pow(v, 1/2.2) * 255));
+        return `rgb(${Math.round(clamp(sr))}, ${Math.round(clamp(sg))}, ${Math.round(clamp(sb))})`;
+    }
+
     function updateSimulation(rgb, isDark) {
-        const types = {
-            simP: simulateColor(rgb, 'protanopia'),
-            simD: simulateColor(rgb, 'deuteranopia'),
-            simT: simulateColor(rgb, 'tritanopia')
-        };
-        for (const [id, color] of Object.entries(types)) {
-            const el = document.getElementById(id);
+        const types = ['protanopia', 'deuteranopia', 'tritanopia'];
+        const ids = ['simP', 'simD', 'simT'];
+
+        types.forEach((type, i) => {
+            const el = document.getElementById(ids[i]);
+            const color = simulateColor(rgb, type);
             el.style.backgroundColor = color;
             const bTxt = el.querySelector('[class$="black"]');
             const wTxt = el.querySelector('[class$="white"]');
@@ -355,25 +379,7 @@
                 wTxt.innerText = "WHITE"; bTxt.innerHTML = "BLACK ✅";
                 wTxt.style.opacity = "0.2"; bTxt.style.opacity = "1";
             }
-        }
-    }
-
-    function simulateColor(rgb, type) {
-        let r = rgb.r, g = rgb.g, b = rgb.b;
-        if (type === 'protanopia') {
-            r = 0.56667 * rgb.r + 0.43333 * rgb.g;
-            g = 0.55833 * rgb.r + 0.44167 * rgb.g;
-            b = 0.24167 * rgb.g + 0.75833 * rgb.b;
-        } else if (type === 'deuteranopia') {
-            r = 0.625 * rgb.r + 0.375 * rgb.g;
-            g = 0.7 * rgb.r + 0.3 * rgb.g;
-            b = 0.3 * rgb.g + 0.7 * rgb.b;
-        } else if (type === 'tritanopia') {
-            r = 0.95 * rgb.r + 0.05 * rgb.g;
-            g = 0.43333 * rgb.g + 0.56667 * rgb.b;
-            b = 0.475 * rgb.g + 0.525 * rgb.b;
-        }
-        return `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+        });
     }
 
     function showModal() { document.getElementById('modal').style.display = 'flex'; }
