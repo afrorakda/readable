@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>READABLE</title>
     
     <link rel="icon" href="image_114.png">
@@ -16,8 +16,9 @@
             --input-bg: #fafafa;
             --radius: 15px;
             --text-gray: #666;
-            --ok: #4caf50;
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -28,71 +29,84 @@
             justify-content: center;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
         }
 
         .container {
             width: 100%;
             max-width: 420px;
             padding: 20px;
-            box-sizing: border-box;
-            text-align: center;
             display: flex;
             flex-direction: column;
         }
 
-        header { margin-bottom: 10px; }
-        h1 { font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -1px; }
-        .subtitle { font-size: 0.85rem; color: var(--text-gray); font-weight: 600; margin-top: 4px; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
 
+        h1 { font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -1.5px; }
+
+        .hub-link {
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--main);
+            background: var(--accent);
+            padding: 8px 12px;
+            border-radius: 12px;
+        }
+
+        .subtitle { font-size: 0.85rem; color: var(--text-gray); font-weight: 700; margin-bottom: 15px; text-align: left; }
+
+        /* 入力エリア */
         .input-card {
             background: var(--input-bg);
-            padding: 12px;
+            padding: 15px;
             border-radius: var(--radius);
             border: 2px solid var(--accent);
             margin-bottom: 15px;
         }
+
         .label {
             font-size: 0.7rem;
-            font-weight: 800;
+            font-weight: 900;
             color: var(--text-gray);
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             display: block;
             text-align: left;
             text-transform: uppercase;
         }
+
         .input-wrapper { position: relative; display: flex; align-items: center; }
+
         input {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             padding-right: 45px;
             border: 2px solid var(--accent);
-            border-radius: 12px;
+            border-radius: var(--radius);
             background: #fff;
             font-size: 1.2rem;
             font-weight: 800;
             color: var(--main) !important;
-            box-sizing: border-box;
             outline: none;
             -webkit-appearance: none;
             -webkit-text-fill-color: var(--main) !important;
             opacity: 1 !important;
-            user-select: text;
         }
-        input::placeholder { color: #ccc; -webkit-text-fill-color: #ccc; }
 
         .clr-btn {
             position: absolute;
             right: 10px;
             width: 30px;
             height: 30px;
-            background: rgba(0,0,0,0.05);
+            background: var(--accent);
             border: none;
             border-radius: 50%;
-            color: #888;
-            font-size: 1.2rem;
+            color: var(--main);
+            font-size: 1rem;
             font-weight: 800;
             cursor: pointer;
             display: none;
@@ -101,10 +115,10 @@
         }
         .clr-btn.active { display: flex; }
 
-        /* メインプレビュー */
+        /* プレビューボード */
         .preview-board {
             width: 100%;
-            height: 150px;
+            height: 140px;
             border-radius: var(--radius);
             margin-bottom: 15px;
             display: flex;
@@ -114,82 +128,77 @@
             gap: 10px;
             border: 2px solid var(--accent);
             cursor: pointer;
-            transition: transform 0.1s, background-color 0.2s;
             position: relative;
+            transition: transform 0.1s;
         }
         .preview-board:active { transform: scale(0.98); }
         
         .copy-hint {
             position: absolute;
-            bottom: 8px;
+            bottom: 10px;
             font-size: 0.6rem;
-            font-weight: 800;
-            opacity: 0.4;
+            font-weight: 900;
+            opacity: 0.5;
             letter-spacing: 1px;
         }
 
         .preview-text { font-weight: 900; transition: all 0.2s; display: flex; align-items: center; gap: 5px; }
-        .preview-text.small { font-size: 0.9rem; opacity: 0.4; }
-        .preview-text.large { font-size: 1.6rem; opacity: 1; }
+        .preview-text.small { font-size: 0.9rem; opacity: 0.3; }
+        .preview-text.large { font-size: 1.8rem; opacity: 1; }
 
-        /* アウトライン付きチェックマーク */
-        .check {
-            display: none;
-            font-size: 1.2rem;
-            filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff);
-        }
-        .preview-text.large .check { display: inline; }
-        .preview-text[style*="color: #fff"] .check { filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000); }
-
-        /* 色覚プレビュー */
-        .sim-label { color: #444; font-size: 0.85rem; font-weight: 900; margin-bottom: 8px; text-align: left; margin-left: 5px; }
+        /* シミュレーション */
+        .sim-label { font-size: 0.8rem; font-weight: 900; color: var(--main); margin-bottom: 10px; text-align: left; }
         .simulation-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            flex-grow: 1;
-            margin-bottom: 15px;
+            gap: 10px;
+            margin-bottom: 20px;
         }
         .sim-card {
-            padding: 12px 2px;
-            border-radius: 12px;
+            padding: 15px 5px;
+            border-radius: var(--radius);
             font-weight: 800;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
             gap: 5px;
-            border: 1px solid var(--accent);
+            border: 2px solid var(--accent);
         }
-        .sim-text { font-weight: 900; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 2px; }
-        .sim-text.large { font-size: 1.1rem; }
-        .sim-type { color: var(--text-gray); font-size: 0.6rem; margin-top: 3px; font-weight: 800; }
+        .sim-text { font-weight: 900; font-size: 0.7rem; }
+        .sim-text.active { font-size: 1rem; }
+        .sim-type { color: var(--text-gray); font-size: 0.6rem; margin-top: 5px; font-weight: 900; }
 
-        .footer-btns { display: flex; gap: 10px; margin-bottom: 10px; }
+        /* フッターボタン */
+        .footer-btns { display: flex; gap: 10px; margin-bottom: 15px; }
         .kofi-btn {
-            flex: 6; background: var(--main); color: #fff;
-            padding: 12px; border-radius: var(--radius);
-            text-decoration: none; font-weight: bold; font-size: 13px;
+            flex: 1; background: var(--main); color: #fff;
+            height: 50px; border-radius: var(--radius);
+            text-decoration: none; font-weight: 900; font-size: 0.85rem;
             display: flex; align-items: center; justify-content: center;
+            -webkit-text-fill-color: #fff;
         }
         .home-btn {
-            flex: 4; background: var(--accent); color: var(--main);
-            border: none; padding: 12px;
-            border-radius: var(--radius); font-weight: 800; font-size: 12px; 
+            flex: 1; background: var(--accent); color: var(--main);
+            border: none; height: 50px;
+            border-radius: var(--radius); font-weight: 900; font-size: 0.85rem; 
             cursor: pointer;
         }
 
-        footer { font-size: 10px; color: #aaa; line-height: 1.6; font-weight: 500; padding-bottom: 5px; }
+        footer { text-align: center; font-size: 0.7rem; color: #999; line-height: 1.5; font-weight: 700; padding-bottom: 10px; }
         footer a { color: inherit; text-decoration: underline; }
 
+        /* モーダル */
         #modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 100;
+            background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000;
+            backdrop-filter: blur(4px);
         }
         .modal-content {
-            background: #fff; width: 85%; max-width: 340px; padding: 30px;
+            background: #fff; width: 90%; max-width: 340px; padding: 35px;
             border-radius: var(--radius); text-align: left; position: relative;
         }
-        .close-x { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #888; cursor: pointer; }
+        .close-x { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #ccc; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -197,11 +206,12 @@
 <div class="container">
     <header>
         <h1>READABLE</h1>
-        <p class="subtitle">Visual clarity & Accessibility check.</p>
+        <a href="https://afrorakda.github.io/" class="hub-link">🏠 Hub</a>
     </header>
+    <p class="subtitle">Visual clarity & Accessibility check.</p>
 
     <div class="input-card">
-        <label class="label">Background Color (HEX)</label>
+        <label class="label">Background HEX</label>
         <div class="input-wrapper">
             <input type="text" id="hexInput" placeholder="#007AFF" maxlength="7" oninput="updateUI()">
             <button class="clr-btn" id="clrBtn" onclick="clearInput()">×</button>
@@ -209,8 +219,8 @@
     </div>
 
     <div class="preview-board" id="board" onclick="copyHex()">
-        <div class="preview-text" id="textBlack" style="color: #000;">BLACK <span class="check">✅</span></div>
-        <div class="preview-text" id="textWhite" style="color: #fff;">WHITE <span class="check">✅</span></div>
+        <div class="preview-text" id="textBlack" style="color: #000;">BLACK</div>
+        <div class="preview-text" id="textWhite" style="color: #fff;">WHITE</div>
         <div class="copy-hint" id="copyHint">TAP TO COPY HEX</div>
     </div>
 
@@ -238,19 +248,20 @@
         <button class="home-btn" onclick="showModal()">Add Home</button>
     </div>
 
-    <footer>
-        <div>No login / No tracking / No ads / Browser only</div>
-        <div><a href="https://afrorakda.com/privacy/">Privacy Policy</a> / afrorakda © 2026</div>
+    <footer id="dynamicFooter">
+        No login / No tracking / No ads / Browser only<br>
+        <a href="https://afrorakda.com/privacy/">Privacy Policy</a> / afrorakda © 2026
     </footer>
 </div>
 
 <div id="modal" onclick="hideModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <span class="close-x" onclick="hideModal()">×</span>
-        <h3>📱 Install</h3>
-        <p>Add to your home screen.</p>
-        <p>🍏 <strong>iPhone (Safari):</strong><br>Tap Share, then Add to Home Screen.</p>
-        <p>🤖 <strong>Android (Chrome):</strong><br>Tap Menu (⋮), then Add to Home Screen.</p>
+        <h3 style="margin-bottom: 15px; font-weight: 900;">📱 Install</h3>
+        <div style="font-size: 0.9rem; line-height: 1.6; font-weight: 700;">
+            <p>🍏 <strong>iPhone:</strong><br>Share > Add to Home Screen</p>
+            <p style="margin-top:10px;">🤖 <strong>Android:</strong><br>Menu (⋮) > Add to Home Screen</p>
+        </div>
     </div>
 </div>
 
@@ -271,17 +282,18 @@
     }
 
     function updateUI() {
-        let val = hexInput.value.trim();
+        let val = hexInput.value.trim().replace(/\s/g, '');
         if (!val) { resetUI(); return; }
 
         if (!val.startsWith('#')) val = '#' + val;
-        if (val.length === 4) {
-            val = '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
-        }
         
         clrBtn.classList.toggle('active', hexInput.value !== '');
 
-        if (/^#[0-9A-F]{6}$/i.test(val)) {
+        if (/^#([0-9A-F]{3}){1,2}$/i.test(val)) {
+            // 3桁HEXを6桁に変換
+            if (val.length === 4) {
+                val = '#' + val[1] + val[1] + val[2] + val[2] + val[3] + val[3];
+            }
             currentValidHex = val.toUpperCase();
             board.style.backgroundColor = val;
             const rgb = hexToRgb(val);
@@ -291,10 +303,14 @@
             if (isDark) {
                 textWhite.className = "preview-text large";
                 textBlack.className = "preview-text small";
+                textWhite.innerHTML = "WHITE ✅";
+                textBlack.innerHTML = "BLACK";
                 copyHint.style.color = "#fff";
             } else {
                 textWhite.className = "preview-text small";
                 textBlack.className = "preview-text large";
+                textWhite.innerHTML = "WHITE";
+                textBlack.innerHTML = "BLACK ✅";
                 copyHint.style.color = "#000";
             }
             updateSimulation(rgb, isDark);
@@ -307,6 +323,8 @@
         board.style.backgroundColor = '#fafafa';
         textWhite.className = "preview-text small";
         textBlack.className = "preview-text small";
+        textWhite.innerHTML = "WHITE";
+        textBlack.innerHTML = "BLACK";
         copyHint.style.color = "var(--text-gray)";
         currentValidHex = "";
         clrBtn.classList.toggle('active', hexInput.value !== '');
@@ -347,19 +365,19 @@
         for (const [id, color] of Object.entries(types)) {
             const el = document.getElementById(id);
             el.style.backgroundColor = color;
-            const blackTxt = el.querySelector('.sim-text[style*="color:#000"]');
-            const whiteTxt = el.querySelector('.sim-text[style*="color:#fff"]');
+            const bTxt = el.querySelector('[class$="black"]');
+            const wTxt = el.querySelector('[class$="white"]');
             
             if (isDark) {
-                whiteTxt.classList.add('large');
-                blackTxt.classList.remove('large');
-                whiteTxt.innerHTML = "WHITE ✅";
-                blackTxt.innerText = "BLACK";
+                wTxt.classList.add('active');
+                bTxt.classList.remove('active');
+                wTxt.innerHTML = "WHITE ✅";
+                bTxt.innerText = "BLACK";
             } else {
-                whiteTxt.classList.remove('large');
-                blackTxt.classList.add('large');
-                whiteTxt.innerText = "WHITE";
-                blackTxt.innerHTML = "BLACK ✅";
+                wTxt.classList.remove('active');
+                bTxt.classList.add('active');
+                wTxt.innerText = "WHITE";
+                bTxt.innerHTML = "BLACK ✅";
             }
         }
     }
@@ -384,6 +402,18 @@
 
     function showModal() { document.getElementById('modal').style.display = 'flex'; }
     function hideModal() { document.getElementById('modal').style.display = 'none'; }
+
+    async function loadFooter() {
+        try {
+            const res = await fetch('footer.json');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.footerHtml) document.getElementById('dynamicFooter').innerHTML = data.footerHtml;
+            }
+        } catch (e) {}
+    }
+
+    window.onload = loadFooter;
     updateUI();
 </script>
 
