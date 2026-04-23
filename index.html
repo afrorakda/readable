@@ -4,72 +4,252 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>READABLE</title>
+    
+    <link rel="icon" href="image_114.png">
+    <link rel="apple-touch-icon" href="image_114.png">
+
     <style>
-        :root { --main: #333; --bg: #fff; --accent: #eee; --radius: 15px; }
+        :root {
+            --main: #333;
+            --bg: #fff;
+            --accent: #eee;
+            --input-bg: #fafafa;
+            --radius: 15px;
+            --text-gray: #666;
+        }
+
+        /* 憲法: 全要素 15px角丸 / iOS Safari対策 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--main); display: flex; justify-content: center; padding: 20px; }
-        .container { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 15px; }
-        header { display: flex; justify-content: space-between; align-items: center; }
-        .hub-link { text-decoration: none; font-size: 0.8rem; font-weight: 800; color: var(--main); background: var(--accent); padding: 8px 14px; border-radius: var(--radius); }
-        input { width: 100%; padding: 16px; border: 2px solid var(--accent); border-radius: var(--radius); font-size: 1.3rem; font-weight: 800; outline: none; }
-        .board { width: 100%; height: 160px; border-radius: var(--radius); display: flex; justify-content: center; align-items: center; border: 2px solid var(--accent); font-weight: 900; font-size: 2.2rem; }
-        .sim-card { height: 70px; padding: 0 20px; border-radius: var(--radius); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: space-between; font-weight: 900; margin-top: 10px; }
-        footer { text-align: center; font-size: 0.7rem; color: #999; margin-top: 20px; font-weight: 700; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            padding: env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px) 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -1.5px; }
+
+        /* Hub連携ボタン */
+        .hub-link {
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--main);
+            background: var(--accent);
+            padding: 8px 14px;
+            border-radius: var(--radius);
+        }
+
+        .subtitle { font-size: 0.9rem; color: var(--text-gray); font-weight: 700; text-align: left; }
+
+        .input-card {
+            background: var(--input-bg);
+            padding: 18px;
+            border-radius: var(--radius);
+            border: 2px solid var(--accent);
+            position: relative;
+        }
+
+        .label {
+            font-size: 0.75rem;
+            font-weight: 900;
+            color: var(--text-gray);
+            margin-bottom: 10px;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--accent);
+            border-radius: var(--radius);
+            background: #fff;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--main) !important;
+            outline: none;
+            -webkit-appearance: none;
+            -webkit-text-fill-color: var(--main) !important;
+            opacity: 1 !important;
+        }
+
+        .preview-board {
+            width: 100%;
+            height: 180px;
+            border-radius: var(--radius);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid var(--accent);
+            cursor: pointer;
+            position: relative;
+            font-weight: 900;
+            font-size: 2.5rem;
+            transition: transform 0.1s, background 0.2s;
+        }
+        .preview-board:active { transform: scale(0.98); }
+
+        .sim-label { font-size: 0.85rem; font-weight: 900; color: var(--main); margin-top: 5px; }
+
+        .simulation-stack { display: flex; flex-direction: column; gap: 10px; }
+        
+        .sim-card {
+            width: 100%; height: 75px; padding: 0 20px; border-radius: var(--radius);
+            font-weight: 800; display: flex; align-items: center; justify-content: space-between;
+            border: 2px solid var(--accent); transition: background 0.2s, color 0.2s;
+        }
+        .sim-type { font-size: 0.75rem; font-weight: 900; opacity: 0.6; }
+        .sim-result { font-weight: 900; font-size: 1rem; }
+
+        .footer-btns { display: flex; gap: 10px; margin-top: 5px; }
+        .kofi-btn, .home-btn {
+            flex: 1; height: 54px; border-radius: var(--radius); display: flex;
+            align-items: center; justify-content: center; text-decoration: none;
+            font-weight: 900; font-size: 0.9rem; cursor: pointer; border: none;
+        }
+        .kofi-btn { background: var(--main); color: #fff; -webkit-text-fill-color: #fff; }
+        .home-btn { background: var(--accent); color: var(--main); }
+
+        /* 鉄壁フッター（聖域ロジック） */
+        footer { text-align: center; font-size: 0.75rem; color: #999; line-height: 1.6; font-weight: 700; margin-top: 10px; }
+        footer a { color: inherit; text-decoration: underline; }
+
+        #modal {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: #fff; width: 90%; max-width: 340px; padding: 35px;
+            border-radius: var(--radius); text-align: left; position: relative;
+        }
     </style>
 </head>
 <body>
+
 <div class="container">
-    <header><h1>READABLE</h1><a href="https://afrorakda.github.io/" class="hub-link">🏠 Hub</a></header>
-    <input type="text" id="hex" placeholder="FF00FF" maxlength="7" oninput="draw()">
-    <div class="board" id="b">READY</div>
-    <div class="sim-stack">
-        <div class="sim-card" id="sP">P-type <span id="tP"></span></div>
-        <div class="sim-card" id="sD">D-type <span id="tD"></span></div>
-        <div class="sim-card" id="sT">T-type <span id="tT"></span></div>
+    <header>
+        <h1>READABLE</h1>
+        <a href="https://afrorakda.github.io/" class="hub-link">🏠 Hub</a>
+    </header>
+    <p class="subtitle">Individual accessibility check.</p>
+
+    <div class="input-card">
+        <label class="label">Background HEX</label>
+        <input type="text" id="hexInput" placeholder="FF00FF" maxlength="7" oninput="updateUI()">
     </div>
-    <footer>afrorakda © 2026</footer>
+
+    <div class="preview-board" id="board" onclick="copyHex()">
+        <span id="mainLabel">READY</span>
+    </div>
+
+    <div class="sim-label">COLOR BLIND PREVIEW</div>
+    <div class="simulation-stack">
+        <div class="sim-card" id="simP"><span class="sim-type">P-type</span><span class="sim-result" id="resP"></span></div>
+        <div class="sim-card" id="simD"><span class="sim-type">D-type</span><span class="sim-result" id="resD"></span></div>
+        <div class="sim-card" id="simT"><span class="sim-type">T-type</span><span class="sim-result" id="resT"></span></div>
+    </div>
+
+    <div class="footer-btns">
+        <a href="https://ko-fi.com/afrorakda" target="_blank" class="kofi-btn">☕️ buy me a coffee</a>
+        <button class="home-btn" onclick="showModal()">Add Home</button>
+    </div>
+
+    <footer id="dynamicFooter">
+        No login / No tracking / No ads / Browser only<br>
+        <a href="https://ko-fi.com/afrorakda">Ko-fi</a> / 
+        <a href="https://afrorakda.com/privacy/">Privacy Policy</a> / afrorakda © 2026
+    </footer>
 </div>
+
+<div id="modal" onclick="hideModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <h3 style="margin-bottom: 15px; font-weight: 900;">📱 Install</h3>
+        <p style="font-size: 0.9rem; line-height: 1.6; font-weight: 700;">
+            🍏 <strong>iPhone:</strong><br>Share > Add to Home Screen<br><br>
+            🤖 <strong>Android:</strong><br>Menu (⋮) > Add to Home Screen
+        </p>
+    </div>
+</div>
+
 <script>
-    function draw() {
-        let v = document.getElementById('hex').value.trim().replace('#', '');
+    const input = document.getElementById('hexInput');
+    const board = document.getElementById('board');
+    const label = document.getElementById('mainLabel');
+
+    function updateUI() {
+        let v = input.value.trim().replace('#', '');
         if (v.length !== 6) return;
 
         const r = parseInt(v.slice(0, 2), 16);
         const g = parseInt(v.slice(2, 4), 16);
         const b = parseInt(v.slice(4, 6), 16);
 
-        // メイン反映
-        const board = document.getElementById('b');
-        board.style.backgroundColor = '#' + v;
+        // メイン描画
         const l = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        board.style.color = l < 0.5 ? '#fff' : '#000';
-        board.innerText = l < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
+        board.style.backgroundColor = '#' + v;
+        label.style.color = l < 0.5 ? '#fff' : '#000';
+        label.innerText = l < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
 
-        // P-type: 赤を緑に寄せる
+        // P-type
         const pr = Math.round(r * 0.56 + g * 0.44);
         const pg = Math.round(r * 0.55 + g * 0.45);
-        updateCard('sP', 'tP', pr, pg, b);
+        updateSim('simP', 'resP', pr, pg, b);
 
-        // D-type: 緑を赤に寄せる
+        // D-type
         const dr = Math.round(r * 0.62 + g * 0.38);
         const dg = Math.round(r * 0.7 + g * 0.3);
-        updateCard('sD', 'tD', dr, dg, b);
+        updateSim('simD', 'resD', dr, dg, b);
 
-        // T-type: 青を完全に消す (FORCE RED)
-        // 3型は青が識別できない＝青成分が輝度に寄与しない、または緑と混同する
-        // ここでは極端に「Bを0」にして、RとGのみで色を作る
-        updateCard('sT', 'tT', r, g, 0);
+        // T-type (Blue cut force logic)
+        updateSim('simT', 'resT', r, g, 0);
     }
 
-    function updateCard(id, tid, r, g, b) {
+    function updateSim(id, tid, r, g, b) {
         const el = document.getElementById(id);
-        const tx = document.getElementById(tid);
+        const res = document.getElementById(tid);
         const color = `rgb(${r},${g},${b})`;
-        el.style.backgroundColor = color;
         const l = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        el.style.backgroundColor = color;
         el.style.color = l < 0.5 ? '#fff' : '#000';
-        tx.innerText = l < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
+        res.innerText = l < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
     }
+
+    async function copyHex() {
+        let v = input.value.trim();
+        if (!v) return;
+        if (!v.startsWith('#')) v = '#' + v;
+        await navigator.clipboard.writeText(v.toUpperCase());
+        const original = label.innerText;
+        label.innerText = "COPIED!";
+        setTimeout(() => { label.innerText = original; }, 800);
+    }
+
+    function showModal() { document.getElementById('modal').style.display = 'flex'; }
+    function hideModal() { document.getElementById('modal').style.display = 'none'; }
+
+    // 初期実行
+    updateUI();
 </script>
+
 </body>
 </html>
