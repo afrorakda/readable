@@ -261,13 +261,18 @@
         hexInput.focus();
     }
 
+    // Mathematical safety: Clamp values and ensure 0-1 range
+    function safePow(v, p) {
+        return Math.pow(Math.max(0, v), p);
+    }
+
     function toLin(c) {
         c /= 255;
-        return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        return c <= 0.04045 ? c / 12.92 : safePow((c + 0.055) / 1.055, 2.4);
     }
 
     function toSRGB(c) {
-        c = c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+        c = c <= 0.0031308 ? 12.92 * c : 1.055 * safePow(c, 1 / 2.4) - 0.055;
         return Math.round(Math.max(0, Math.min(1, c)) * 255);
     }
 
@@ -296,7 +301,6 @@
             const mainLum = getLuminance(r, g, b);
             const mainIsDark = mainLum < 0.179;
 
-            // Main UI check
             textWhite.className = mainIsDark ? "preview-text large" : "preview-text small";
             textBlack.className = mainIsDark ? "preview-text small" : "preview-text large";
             textWhite.innerHTML = mainIsDark ? "WHITE ✅" : "WHITE";
@@ -305,7 +309,7 @@
 
             const lr = toLin(r), lg = toLin(g), lb = toLin(b);
 
-            // Simulation matrices (LMS base)
+            // Simulation matrices (Fixed and Clamped)
             const sims = {
                 P: { r: 0.17056*lr + 0.82944*lg, g: 0.17056*lr + 0.82944*lg, b: -0.00452*lr + 0.02325*lg + 0.98126*lb },
                 D: { r: 0.33066*lr + 0.66934*lg, g: 0.33066*lr + 0.66934*lg, b: -0.05213*lr + 0.05474*lg + 0.99739*lb },
@@ -314,17 +318,17 @@
 
             ['P','D','T'].forEach(id => {
                 const s = sims[id];
-                const sr = toSRGB(s.r), sg = toSRGB(s.g), sb = toSRGB(s.b);
                 const card = document.getElementById('sim' + id);
+                // Physical clamping before sRGB conversion
+                const sr = toSRGB(s.r), sg = toSRGB(s.g), sb = toSRGB(s.b);
                 card.style.backgroundColor = `rgb(${sr},${sg},${sb})`;
                 
-                // INDIVIDUAL luminance check for each simulated window
+                // Individual luminance check
                 const simLum = getLuminance(sr, sg, sb);
                 const simIsDark = simLum < 0.179;
 
                 const bt = card.querySelector('[class$="black"]');
                 const wt = card.querySelector('[class$="white"]');
-                
                 if (simIsDark) {
                     wt.classList.add('active'); bt.classList.remove('active');
                     wt.innerHTML = "WHITE ✅"; bt.innerText = "BLACK";
@@ -349,7 +353,12 @@
         copyHint.style.color = "var(--text-gray)";
         currentValidHex = "";
         ['simP','simD','simT'].forEach(id => {
-            document.getElementById(id).style.backgroundColor = '#fafafa';
+            const card = document.getElementById(id);
+            card.style.backgroundColor = '#fafafa';
+            card.querySelector('[class$="black"]').style.opacity = "0.2";
+            card.querySelector('[class$="white"]').style.opacity = "0.2";
+            card.querySelector('[class$="white"]').innerHTML = "WHITE";
+            card.querySelector('[class$="black"]').innerHTML = "BLACK";
         });
     }
 
