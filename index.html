@@ -21,8 +21,8 @@
 <body>
 <div class="container">
     <header><h1>READABLE</h1><a href="https://afrorakda.github.io/" class="hub-link">🏠 Hub</a></header>
-    <input type="text" id="hex" placeholder="FF0000" maxlength="7" oninput="draw()">
-    <div class="board" id="b">WHITE ✅</div>
+    <input type="text" id="hex" placeholder="FF00FF" maxlength="7" oninput="draw()">
+    <div class="board" id="b">BLACK ✅</div>
     <div class="sim-card" id="sP">P-type <span id="tP"></span></div>
     <div class="sim-card" id="sD">D-type <span id="tD"></span></div>
     <div class="sim-card" id="sT">T-type <span id="tT"></span></div>
@@ -44,7 +44,9 @@
             let rl=Math.pow(r/255,2.2), gl=Math.pow(g/255,2.2), bl=Math.pow(b/255,2.2), nr, ng, nb;
             if(t==='P'){ nr=0.56*rl+0.44*gl; ng=0.55*rl+0.45*gl; nb=0.24*gl+0.76*bl; }
             else if(t==='D'){ nr=0.62*rl+0.38*gl; ng=0.7*rl+0.3*gl; nb=0.3*gl+0.7*bl; }
-            else { nr=0.95*rl+0.05*bl; ng=0.43*gl+0.57*bl; nb=0.47*gl+0.53*bl; }
+            // 【修正】T-type（Tritanopia）の計算式を強化（青成分を極限までカット）
+            else { nr=0.95*rl+0.05*bl; ng=0.43*gl+0.57*bl; nb=0*gl+1*bl; } 
+            
             const gmp = (c) => Math.round(255 * Math.pow(Math.max(0,c), 1/2.2));
             const sr=gmp(nr), sg=gmp(ng), sb=gmp(nb), sl=(0.299*sr+0.587*sg+0.114*sb)/255;
             const el=document.getElementById('s'+t), tx=document.getElementById('t'+t);
@@ -53,6 +55,8 @@
             tx.innerText = sl < 0.5 ? 'WHITE ✅':'BLACK ✅';
         });
     }
+    // 初期表示（FF00FF）
+    draw();
 </script>
 </body>
 </html>
