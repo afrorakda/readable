@@ -54,11 +54,12 @@
             color: var(--main);
             background: var(--accent);
             padding: 8px 14px;
-            border-radius: 12px;
+            border-radius: var(--radius); /* 15px強制適用 */
         }
 
         .subtitle { font-size: 0.9rem; color: var(--text-gray); font-weight: 700; text-align: left; }
 
+        /* 入力エリア設定 */
         .input-card {
             background: var(--input-bg);
             padding: 18px;
@@ -88,12 +89,14 @@
             font-weight: 800;
             color: var(--main) !important;
             outline: none;
+            /* iOS Safari 対策 */
             -webkit-appearance: none;
             -webkit-text-fill-color: var(--main) !important;
             opacity: 1 !important;
         }
         input::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; }
 
+        /* 共通ルール: clrボタン */
         .clr-btn {
             position: absolute; right: 12px; width: 34px; height: 34px; background: #ccc;
             border: none; border-radius: 50%; color: #fff; font-size: 1.2rem; font-weight: 900;
@@ -101,6 +104,7 @@
         }
         .clr-btn.active { display: flex; }
 
+        /* メインプレビュー */
         .preview-board {
             width: 100%;
             height: 200px;
@@ -128,6 +132,7 @@
 
         .sim-label { font-size: 0.85rem; font-weight: 900; color: var(--main); margin-top: 5px; }
 
+        /* シミュレーションセクション */
         .simulation-stack {
             display: flex;
             flex-direction: column;
@@ -149,6 +154,7 @@
         .sim-text.active { font-size: 1.1rem; }
         .sim-type { color: var(--text-gray); font-size: 0.75rem; font-weight: 900; width: 60px; text-align: right; }
 
+        /* ボタン群 */
         .footer-btns { display: flex; gap: 10px; margin-top: 5px; }
         .kofi-btn {
             flex: 1; background: var(--main); color: #fff; height: 54px; border-radius: var(--radius);
@@ -160,9 +166,11 @@
             border-radius: var(--radius); font-weight: 900; font-size: 0.9rem; cursor: pointer;
         }
 
+        /* 鉄壁フッター */
         footer { text-align: center; font-size: 0.75rem; color: #999; line-height: 1.6; font-weight: 700; margin-top: 10px; }
         footer a { color: inherit; text-decoration: underline; }
 
+        /* モーダル */
         #modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); align-items: center; justify-content: center; z-index: 1000;
@@ -261,10 +269,7 @@
         hexInput.focus();
     }
 
-    // Mathematical safety: Clamp values and ensure 0-1 range
-    function safePow(v, p) {
-        return Math.pow(Math.max(0, v), p);
-    }
+    function safePow(v, p) { return Math.pow(Math.max(0, v), p); }
 
     function toLin(c) {
         c /= 255;
@@ -282,7 +287,7 @@
 
     function updateUI() {
         let val = hexInput.value.trim().replace(/\s/g, '');
-        clrBtn.style.display = val !== '' ? 'flex' : 'none';
+        clrBtn.classList.toggle('active', val !== '');
 
         if (!val) { resetUI(); return; }
         if (!val.startsWith('#')) val = '#' + val;
@@ -309,7 +314,6 @@
 
             const lr = toLin(r), lg = toLin(g), lb = toLin(b);
 
-            // Simulation matrices (Fixed and Clamped)
             const sims = {
                 P: { r: 0.17056*lr + 0.82944*lg, g: 0.17056*lr + 0.82944*lg, b: -0.00452*lr + 0.02325*lg + 0.98126*lb },
                 D: { r: 0.33066*lr + 0.66934*lg, g: 0.33066*lr + 0.66934*lg, b: -0.05213*lr + 0.05474*lg + 0.99739*lb },
@@ -319,11 +323,9 @@
             ['P','D','T'].forEach(id => {
                 const s = sims[id];
                 const card = document.getElementById('sim' + id);
-                // Physical clamping before sRGB conversion
                 const sr = toSRGB(s.r), sg = toSRGB(s.g), sb = toSRGB(s.b);
                 card.style.backgroundColor = `rgb(${sr},${sg},${sb})`;
                 
-                // Individual luminance check
                 const simLum = getLuminance(sr, sg, sb);
                 const simIsDark = simLum < 0.179;
 
@@ -345,7 +347,7 @@
     }
 
     function resetUI() {
-        board.style.backgroundColor = '#fafafa';
+        board.style.backgroundColor = 'var(--input-bg)';
         textWhite.className = "preview-text small";
         textBlack.className = "preview-text small";
         textWhite.innerHTML = "WHITE";
@@ -354,7 +356,7 @@
         currentValidHex = "";
         ['simP','simD','simT'].forEach(id => {
             const card = document.getElementById(id);
-            card.style.backgroundColor = '#fafafa';
+            card.style.backgroundColor = 'var(--input-bg)';
             card.querySelector('[class$="black"]').style.opacity = "0.2";
             card.querySelector('[class$="white"]').style.opacity = "0.2";
             card.querySelector('[class$="white"]').innerHTML = "WHITE";
