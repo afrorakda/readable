@@ -18,7 +18,6 @@
             --text-gray: #666;
         }
 
-        /* 憲法: 全要素 15px角丸 / iOS Safari対策 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
 
         body {
@@ -48,7 +47,6 @@
 
         h1 { font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -1.5px; }
 
-        /* Hub連携ボタン */
         .hub-link {
             text-decoration: none;
             font-size: 0.8rem;
@@ -66,7 +64,6 @@
             padding: 18px;
             border-radius: var(--radius);
             border: 2px solid var(--accent);
-            position: relative;
         }
 
         .label {
@@ -78,9 +75,12 @@
             text-transform: uppercase;
         }
 
+        .input-wrapper { position: relative; display: flex; align-items: center; }
+
         input {
             width: 100%;
             padding: 16px;
+            padding-right: 50px;
             border: 2px solid var(--accent);
             border-radius: var(--radius);
             background: #fff;
@@ -92,6 +92,15 @@
             -webkit-text-fill-color: var(--main) !important;
             opacity: 1 !important;
         }
+        /* 透かしの色の修正 */
+        input::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; opacity: 0.6 !important; }
+
+        .clr-btn {
+            position: absolute; right: 12px; width: 34px; height: 34px; background: #ccc;
+            border: none; border-radius: 50%; color: #fff; font-size: 1.2rem; font-weight: 900;
+            cursor: pointer; display: none; align-items: center; justify-content: center;
+        }
+        .clr-btn.active { display: flex; }
 
         .preview-board {
             width: 100%;
@@ -119,7 +128,6 @@
             border: 2px solid var(--accent); transition: background 0.2s, color 0.2s;
         }
         .sim-type { font-size: 0.75rem; font-weight: 900; opacity: 0.6; }
-        .sim-result { font-weight: 900; font-size: 1rem; }
 
         .footer-btns { display: flex; gap: 10px; margin-top: 5px; }
         .kofi-btn, .home-btn {
@@ -130,7 +138,6 @@
         .kofi-btn { background: var(--main); color: #fff; -webkit-text-fill-color: #fff; }
         .home-btn { background: var(--accent); color: var(--main); }
 
-        /* 鉄壁フッター（聖域ロジック） */
         footer { text-align: center; font-size: 0.75rem; color: #999; line-height: 1.6; font-weight: 700; margin-top: 10px; }
         footer a { color: inherit; text-decoration: underline; }
 
@@ -155,7 +162,10 @@
 
     <div class="input-card">
         <label class="label">Background HEX</label>
-        <input type="text" id="hexInput" placeholder="FF00FF" maxlength="7" oninput="updateUI()">
+        <div class="input-wrapper">
+            <input type="text" id="hexInput" placeholder="#007AFF" maxlength="7" oninput="updateUI()">
+            <button class="clr-btn" id="clrBtn" onclick="clearInput()">×</button>
+        </div>
     </div>
 
     <div class="preview-board" id="board" onclick="copyHex()">
@@ -164,9 +174,9 @@
 
     <div class="sim-label">COLOR BLIND PREVIEW</div>
     <div class="simulation-stack">
-        <div class="sim-card" id="simP"><span class="sim-type">P-type</span><span class="sim-result" id="resP"></span></div>
-        <div class="sim-card" id="simD"><span class="sim-type">D-type</span><span class="sim-result" id="resD"></span></div>
-        <div class="sim-card" id="simT"><span class="sim-type">T-type</span><span class="sim-result" id="resT"></span></div>
+        <div class="sim-card" id="simP"><span class="sim-type">P-type</span><span id="resP"></span></div>
+        <div class="sim-card" id="simD"><span class="sim-type">D-type</span><span id="resD"></span></div>
+        <div class="sim-card" id="simT"><span class="sim-type">T-type</span><span id="resT"></span></div>
     </div>
 
     <div class="footer-btns">
@@ -176,7 +186,6 @@
 
     <footer id="dynamicFooter">
         No login / No tracking / No ads / Browser only<br>
-        <a href="https://ko-fi.com/afrorakda">Ko-fi</a> / 
         <a href="https://afrorakda.com/privacy/">Privacy Policy</a> / afrorakda © 2026
     </footer>
 </div>
@@ -193,16 +202,22 @@
 
 <script>
     const input = document.getElementById('hexInput');
+    const clrBtn = document.getElementById('clrBtn');
     const board = document.getElementById('board');
     const label = document.getElementById('mainLabel');
 
+    function clearInput() { input.value = ''; updateUI(); input.focus(); }
+
     function updateUI() {
         let v = input.value.trim().replace('#', '');
+        clrBtn.style.display = v !== '' ? 'flex' : 'none';
         if (v.length !== 6) return;
 
         const r = parseInt(v.slice(0, 2), 16);
         const g = parseInt(v.slice(2, 4), 16);
         const b = parseInt(v.slice(4, 6), 16);
+
+        const rl = Math.pow(r/255, 2.2), gl = Math.pow(g/255, 2.2), bl = Math.pow(b/255, 2.2);
 
         // メイン描画
         const l = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
@@ -210,17 +225,22 @@
         label.style.color = l < 0.5 ? '#fff' : '#000';
         label.innerText = l < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
 
-        // P-type
-        const pr = Math.round(r * 0.56 + g * 0.44);
-        const pg = Math.round(r * 0.55 + g * 0.45);
-        updateSim('simP', 'resP', pr, pg, b);
+        // 高精度マトリクス復活
+        const gmp = (c) => Math.round(255 * Math.pow(Math.max(0, Math.min(1, c)), 1/2.2));
 
-        // D-type
-        const dr = Math.round(r * 0.62 + g * 0.38);
-        const dg = Math.round(r * 0.7 + g * 0.3);
-        updateSim('simD', 'resD', dr, dg, b);
+        // P
+        const pr = 0.17 * rl + 0.83 * gl;
+        const pg = 0.17 * rl + 0.83 * gl;
+        const pb = 0.02 * gl + 0.98 * bl;
+        updateSim('simP', 'resP', gmp(pr), gmp(pg), gmp(pb));
 
-        // T-type (Blue cut force logic)
+        // D
+        const dr = 0.33 * rl + 0.67 * gl;
+        const dg = 0.33 * rl + 0.67 * gl;
+        const db = 0.05 * gl + 0.95 * bl;
+        updateSim('simD', 'resD', gmp(dr), gmp(dg), gmp(db));
+
+        // T (Force Logic)
         updateSim('simT', 'resT', r, g, 0);
     }
 
@@ -247,7 +267,6 @@
     function showModal() { document.getElementById('modal').style.display = 'flex'; }
     function hideModal() { document.getElementById('modal').style.display = 'none'; }
 
-    // 初期実行
     updateUI();
 </script>
 
