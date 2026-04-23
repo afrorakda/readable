@@ -12,8 +12,8 @@
         header { display: flex; justify-content: space-between; align-items: center; }
         .hub-link { text-decoration: none; font-size: 0.8rem; font-weight: 800; color: var(--main); background: var(--accent); padding: 8px 14px; border-radius: var(--radius); }
         input { width: 100%; padding: 16px; border: 2px solid var(--accent); border-radius: var(--radius); font-size: 1.3rem; font-weight: 800; outline: none; -webkit-appearance: none; }
-        .board { width: 100%; height: 160px; border-radius: var(--radius); display: flex; justify-content: center; align-items: center; border: 2px solid var(--accent); font-weight: 900; font-size: 2.2rem; }
-        .sim-card { height: 70px; padding: 0 20px; border-radius: var(--radius); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: space-between; font-weight: 900; margin-top: 10px; }
+        .board { width: 100%; height: 160px; border-radius: var(--radius); display: flex; justify-content: center; align-items: center; border: 2px solid var(--accent); font-weight: 900; font-size: 2.2rem; transition: background 0.2s; }
+        .sim-card { height: 70px; padding: 0 20px; border-radius: var(--radius); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: space-between; font-weight: 900; margin-top: 10px; transition: background 0.2s; }
         footer { text-align: center; font-size: 0.7rem; color: #999; margin-top: 20px; font-weight: 700; }
         footer a { color: inherit; }
     </style>
@@ -23,39 +23,60 @@
     <header><h1>READABLE</h1><a href="https://afrorakda.github.io/" class="hub-link">🏠 Hub</a></header>
     <input type="text" id="hex" placeholder="FF00FF" maxlength="7" oninput="draw()">
     <div class="board" id="b">BLACK ✅</div>
-    <div class="sim-card" id="sP">P-type <span id="tP"></span></div>
-    <div class="sim-card" id="sD">D-type <span id="tD"></span></div>
-    <div class="sim-card" id="sT">T-type <span id="tT"></span></div>
+    <div class="sim-stack">
+        <div class="sim-card" id="sP">P-type <span id="tP"></span></div>
+        <div class="sim-card" id="sD">D-type <span id="tD"></span></div>
+        <div class="sim-card" id="sT">T-type <span id="tT"></span></div>
+    </div>
     <footer>
         <a href="https://ko-fi.com/afrorakda">Ko-fi</a> / <a href="https://afrorakda.com/privacy/">Privacy Policy</a> / afrorakda © 2026
     </footer>
 </div>
 <script>
     function draw() {
-        let v = document.getElementById('hex').value;
+        let v = document.getElementById('hex').value.trim();
         if(!v.startsWith('#')) v = '#' + v;
         if(!/^#([A-Fa-f0-9]{6})$/.test(v)) return;
         const r = parseInt(v.slice(1,3),16), g = parseInt(v.slice(3,5),16), b = parseInt(v.slice(5,7),16);
-        const l = (0.299*r+0.587*g+0.114*b)/255;
-        document.getElementById('b').style.backgroundColor = v;
-        document.getElementById('b').style.color = l < 0.5 ? '#fff':'#000';
-        document.getElementById('b').innerText = l < 0.5 ? 'WHITE ✅':'BLACK ✅';
-        ['P','D','T'].forEach(t => {
-            let rl=Math.pow(r/255,2.2), gl=Math.pow(g/255,2.2), bl=Math.pow(b/255,2.2), nr, ng, nb;
-            if(t==='P'){ nr=0.56*rl+0.44*gl; ng=0.55*rl+0.45*gl; nb=0.24*gl+0.76*bl; }
-            else if(t==='D'){ nr=0.62*rl+0.38*gl; ng=0.7*rl+0.3*gl; nb=0.3*gl+0.7*bl; }
-            // 【修正】T-type（Tritanopia）の計算式を強化（青成分を極限までカット）
-            else { nr=0.95*rl+0.05*bl; ng=0.43*gl+0.57*bl; nb=0*gl+1*bl; } 
+        
+        // 輝度判定用
+        const lum = (0.299*r+0.587*g+0.114*b)/255;
+        const board = document.getElementById('b');
+        board.style.backgroundColor = v;
+        board.style.color = lum < 0.5 ? '#fff':'#000';
+        board.innerText = lum < 0.5 ? 'WHITE ✅':'BLACK ✅';
+
+        ['P','D','T'].forEach(type => {
+            // ガンマ解除
+            let rl=Math.pow(r/255,2.2), gl=Math.pow(g/255,2.2), bl=Math.pow(b/255,2.2);
+            let nr, ng, nb;
+
+            if(type==='P'){ // Protanopia
+                nr = 0.1705573*rl + 0.8294427*gl;
+                ng = 0.1705573*rl + 0.8294427*gl;
+                nb = -0.0045171*rl + 0.0232594*gl + 0.9812577*bl;
+            } else if(type==='D'){ // Deuteranopia
+                nr = 0.3306601*rl + 0.6693399*gl;
+                ng = 0.3306601*rl + 0.6693399*gl;
+                nb = -0.0521327*rl + 0.0547454*gl + 0.9973873*bl;
+            } else { // Tritanopia (精密マトリクス)
+                nr = 1.0162778*rl + 0.0592254*gl - 0.0755032*bl;
+                ng = 0.0000000*rl + 0.5665816*gl + 0.4334184*bl;
+                nb = 0.0000000*rl + 0.5665816*gl + 0.4334184*bl;
+            }
+
+            // ガンマ補正
+            const gmp = (c) => Math.round(255 * Math.pow(Math.max(0, Math.min(1, c)), 1/2.2));
+            const sr=gmp(nr), sg=gmp(ng), sb=gmp(nb);
+            const sl=(0.299*sr+0.587*sg+0.114*sb)/255;
             
-            const gmp = (c) => Math.round(255 * Math.pow(Math.max(0,c), 1/2.2));
-            const sr=gmp(nr), sg=gmp(ng), sb=gmp(nb), sl=(0.299*sr+0.587*sg+0.114*sb)/255;
-            const el=document.getElementById('s'+t), tx=document.getElementById('t'+t);
+            const el=document.getElementById('s'+type), tx=document.getElementById('t'+type);
             el.style.backgroundColor = `rgb(${sr},${sg},${sb})`;
             el.style.color = sl < 0.5 ? '#fff':'#000';
             tx.innerText = sl < 0.5 ? 'WHITE ✅':'BLACK ✅';
         });
     }
-    // 初期表示（FF00FF）
+    // 初期実行
     draw();
 </script>
 </body>
