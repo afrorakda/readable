@@ -92,8 +92,7 @@
             -webkit-text-fill-color: var(--main) !important;
             opacity: 1 !important;
         }
-        /* 透かしの色の修正 */
-        input::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; opacity: 0.6 !important; }
+        input::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; opacity: 0.5 !important; }
 
         .clr-btn {
             position: absolute; right: 12px; width: 34px; height: 34px; background: #ccc;
@@ -128,6 +127,7 @@
             border: 2px solid var(--accent); transition: background 0.2s, color 0.2s;
         }
         .sim-type { font-size: 0.75rem; font-weight: 900; opacity: 0.6; }
+        .sim-result { font-weight: 900; font-size: 1rem; }
 
         .footer-btns { display: flex; gap: 10px; margin-top: 5px; }
         .kofi-btn, .home-btn {
@@ -149,6 +149,7 @@
             background: #fff; width: 90%; max-width: 340px; padding: 35px;
             border-radius: var(--radius); text-align: left; position: relative;
         }
+        .close-x { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #ccc; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -163,7 +164,7 @@
     <div class="input-card">
         <label class="label">Background HEX</label>
         <div class="input-wrapper">
-            <input type="text" id="hexInput" placeholder="#007AFF" maxlength="7" oninput="updateUI()">
+            <input type="text" id="hexInput" placeholder="#FF00FF" maxlength="7" oninput="updateUI()">
             <button class="clr-btn" id="clrBtn" onclick="clearInput()">×</button>
         </div>
     </div>
@@ -174,9 +175,9 @@
 
     <div class="sim-label">COLOR BLIND PREVIEW</div>
     <div class="simulation-stack">
-        <div class="sim-card" id="simP"><span class="sim-type">P-type</span><span id="resP"></span></div>
-        <div class="sim-card" id="simD"><span class="sim-type">D-type</span><span id="resD"></span></div>
-        <div class="sim-card" id="simT"><span class="sim-type">T-type</span><span id="resT"></span></div>
+        <div class="sim-card" id="simP"><span class="sim-type">P-type</span><span class="sim-result" id="resP"></span></div>
+        <div class="sim-card" id="simD"><span class="sim-type">D-type</span><span class="sim-result" id="resD"></span></div>
+        <div class="sim-card" id="simT"><span class="sim-type">T-type</span><span class="sim-result" id="resT"></span></div>
     </div>
 
     <div class="footer-btns">
@@ -192,6 +193,7 @@
 
 <div id="modal" onclick="hideModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-x" onclick="hideModal()">×</span>
         <h3 style="margin-bottom: 15px; font-weight: 900;">📱 Install</h3>
         <p style="font-size: 0.9rem; line-height: 1.6; font-weight: 700;">
             🍏 <strong>iPhone:</strong><br>Share > Add to Home Screen<br><br>
@@ -210,37 +212,41 @@
 
     function updateUI() {
         let v = input.value.trim().replace('#', '');
-        clrBtn.style.display = v !== '' ? 'flex' : 'none';
+        clrBtn.style.display = (v !== '') ? 'flex' : 'none';
+        clrBtn.classList.toggle('active', v !== '');
+        
         if (v.length !== 6) return;
 
         const r = parseInt(v.slice(0, 2), 16);
         const g = parseInt(v.slice(2, 4), 16);
         const b = parseInt(v.slice(4, 6), 16);
 
-        const rl = Math.pow(r/255, 2.2), gl = Math.pow(g/255, 2.2), bl = Math.pow(b/255, 2.2);
+        // ガンマ解除
+        const rl = Math.pow(r/255, 2.2);
+        const gl = Math.pow(g/255, 2.2);
+        const bl = Math.pow(b/255, 2.2);
 
         // メイン描画
         const l = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
         board.style.backgroundColor = '#' + v;
-        label.style.color = l < 0.5 ? '#fff' : '#000';
-        label.innerText = l < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
+        label.style.color = (l < 0.5) ? '#fff' : '#000';
+        label.innerText = (l < 0.5) ? 'WHITE ✅' : 'BLACK ✅';
 
-        // 高精度マトリクス復活
         const gmp = (c) => Math.round(255 * Math.pow(Math.max(0, Math.min(1, c)), 1/2.2));
 
-        // P
-        const pr = 0.17 * rl + 0.83 * gl;
-        const pg = 0.17 * rl + 0.83 * gl;
-        const pb = 0.02 * gl + 0.98 * bl;
+        // P-type 高精度マトリクス
+        const pr = 0.56667 * rl + 0.43333 * gl;
+        const pg = 0.55833 * rl + 0.44167 * gl;
+        const pb = 0.24167 * gl + 0.75833 * bl;
         updateSim('simP', 'resP', gmp(pr), gmp(pg), gmp(pb));
 
-        // D
-        const dr = 0.33 * rl + 0.67 * gl;
-        const dg = 0.33 * rl + 0.67 * gl;
-        const db = 0.05 * gl + 0.95 * bl;
+        // D-type 高精度マトリクス
+        const dr = 0.625 * rl + 0.375 * gl;
+        const dg = 0.7 * rl + 0.3 * gl;
+        const db = 0.3 * gl + 0.7 * bl;
         updateSim('simD', 'resD', gmp(dr), gmp(dg), gmp(db));
 
-        // T (Force Logic)
+        // T-type (Blue cut)
         updateSim('simT', 'resT', r, g, 0);
     }
 
@@ -250,8 +256,8 @@
         const color = `rgb(${r},${g},${b})`;
         const l = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
         el.style.backgroundColor = color;
-        el.style.color = l < 0.5 ? '#fff' : '#000';
-        res.innerText = l < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
+        el.style.color = (l < 0.5) ? '#fff' : '#000';
+        res.innerText = (l < 0.5) ? 'WHITE ✅' : 'BLACK ✅';
     }
 
     async function copyHex() {
