@@ -146,7 +146,7 @@
         }
         .sim-text-group { display: flex; align-items: center; gap: 15px; }
         .sim-text { font-weight: 900; font-size: 0.8rem; transition: all 0.2s; }
-        .sim-text.active { font-size: 1.2rem; }
+        .sim-text.active { font-size: 1.1rem; }
         .sim-type { color: var(--text-gray); font-size: 0.75rem; font-weight: 900; width: 60px; text-align: right; }
 
         .footer-btns { display: flex; gap: 10px; margin-top: 5px; }
@@ -182,7 +182,7 @@
         <h1>READABLE</h1>
         <a href="https://afrorakda.github.io/" class="hub-link">🏠 Hub</a>
     </header>
-    <p class="subtitle">Visual clarity & Accessibility check.</p>
+    <p class="subtitle">Individual accessibility check.</p>
 
     <div class="input-card">
         <label class="label">Background HEX</label>
@@ -296,6 +296,7 @@
             const mainLum = getLuminance(r, g, b);
             const mainIsDark = mainLum < 0.179;
 
+            // Main UI check
             textWhite.className = mainIsDark ? "preview-text large" : "preview-text small";
             textBlack.className = mainIsDark ? "preview-text small" : "preview-text large";
             textWhite.innerHTML = mainIsDark ? "WHITE ✅" : "WHITE";
@@ -304,23 +305,26 @@
 
             const lr = toLin(r), lg = toLin(g), lb = toLin(b);
 
-            const matrix = {
-                P: { r: 0.17055699 * lr + 0.82944301 * lg + 0 * lb, g: 0.17055699 * lr + 0.82944301 * lg + 0 * lb, b: -0.00451714 * lr + 0.02325368 * lg + 0.98126346 * lb },
-                D: { r: 0.33066007 * lr + 0.66933993 * lg + 0 * lb, g: 0.33066007 * lr + 0.66933993 * lg + 0 * lb, b: -0.05213271 * lr + 0.0547408 * lg + 0.99739191 * lb },
-                T: { r: 1.01627775 * lr + 0.05922548 * lg - 0.07550323 * lb, g: 0 * lr + 0.56658162 * lg + 0.43341838 * lb, b: 0 * lr + 0.56658162 * lg + 0.43341838 * lb }
+            // Simulation matrices (LMS base)
+            const sims = {
+                P: { r: 0.17056*lr + 0.82944*lg, g: 0.17056*lr + 0.82944*lg, b: -0.00452*lr + 0.02325*lg + 0.98126*lb },
+                D: { r: 0.33066*lr + 0.66934*lg, g: 0.33066*lr + 0.66934*lg, b: -0.05213*lr + 0.05474*lg + 0.99739*lb },
+                T: { r: 1.01628*lr + 0.05923*lg - 0.0755*lb, g: 0.56658*lg + 0.43342*lb, b: 0.56658*lg + 0.43342*lb }
             };
 
             ['P','D','T'].forEach(id => {
-                const s = matrix[id];
-                const card = document.getElementById('sim' + id);
+                const s = sims[id];
                 const sr = toSRGB(s.r), sg = toSRGB(s.g), sb = toSRGB(s.b);
+                const card = document.getElementById('sim' + id);
                 card.style.backgroundColor = `rgb(${sr},${sg},${sb})`;
                 
-                const simLum = 0.2126 * toLin(sr) + 0.7152 * toLin(sg) + 0.0722 * toLin(sb);
+                // INDIVIDUAL luminance check for each simulated window
+                const simLum = getLuminance(sr, sg, sb);
                 const simIsDark = simLum < 0.179;
 
                 const bt = card.querySelector('[class$="black"]');
                 const wt = card.querySelector('[class$="white"]');
+                
                 if (simIsDark) {
                     wt.classList.add('active'); bt.classList.remove('active');
                     wt.innerHTML = "WHITE ✅"; bt.innerText = "BLACK";
