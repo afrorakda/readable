@@ -18,11 +18,11 @@
             --text-gray: #666;
         }
 
-        /* 憲法: 15px角丸 / iOS Safari対策 */
+        /* 憲法: 全要素 15px角丸 / iOS Safari対策 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg);
             color: var(--main);
             display: flex;
@@ -58,6 +58,8 @@
             border-radius: var(--radius);
         }
 
+        .subtitle { font-size: 0.9rem; color: var(--text-gray); font-weight: 700; text-align: left; }
+
         .input-card {
             background: var(--input-bg);
             padding: 18px;
@@ -91,13 +93,16 @@
             -webkit-text-fill-color: var(--main) !important;
             opacity: 1 !important;
         }
-        input::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; }
+        /* 修正: 透かしの色を適切に薄く */
+        input::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; opacity: 0.6 !important; }
 
+        /* 修正: クリアボタンの位置調整 */
         .clr-btn {
             position: absolute; right: 12px; width: 34px; height: 34px; background: #ccc;
             border: none; border-radius: 50%; color: #fff; font-size: 1.2rem; font-weight: 900;
             cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 10;
         }
+        .clr-btn.active { display: flex; }
 
         .preview-board {
             width: 100%;
@@ -108,28 +113,35 @@
             align-items: center;
             border: 2px solid var(--accent);
             cursor: pointer;
+            position: relative;
             font-weight: 900;
             font-size: 2.5rem;
-            transition: transform 0.1s;
+            transition: transform 0.1s, background 0.2s;
         }
+        .preview-board:active { transform: scale(0.98); }
 
-        .sim-stack { display: flex; flex-direction: column; gap: 10px; }
+        .sim-label { font-size: 0.85rem; font-weight: 900; color: var(--main); margin-top: 5px; }
+
+        .simulation-stack { display: flex; flex-direction: column; gap: 10px; }
         
         .sim-card {
             width: 100%; height: 75px; padding: 0 20px; border-radius: var(--radius);
             font-weight: 800; display: flex; align-items: center; justify-content: space-between;
-            border: 2px solid var(--accent);
+            border: 2px solid var(--accent); transition: background 0.2s, color 0.2s;
         }
+        .sim-type { font-size: 0.75rem; font-weight: 900; opacity: 0.6; }
+        .sim-result { font-weight: 900; font-size: 1rem; }
 
         .footer-btns { display: flex; gap: 10px; margin-top: 5px; }
         .kofi-btn, .home-btn {
             flex: 1; height: 54px; border-radius: var(--radius); display: flex;
             align-items: center; justify-content: center; text-decoration: none;
-            font-weight: 900; font-size: 0.9rem; border: none; cursor: pointer;
+            font-weight: 900; font-size: 0.9rem; cursor: pointer; border: none;
         }
         .kofi-btn { background: var(--main); color: #fff; -webkit-text-fill-color: #fff; }
         .home-btn { background: var(--accent); color: var(--main); }
 
+        /* 鉄壁フッター（聖域ロジック） */
         footer { text-align: center; font-size: 0.75rem; color: #999; line-height: 1.6; font-weight: 700; margin-top: 10px; }
         footer a { color: inherit; text-decoration: underline; }
 
@@ -139,8 +151,9 @@
         }
         .modal-content {
             background: #fff; width: 90%; max-width: 340px; padding: 35px;
-            border-radius: var(--radius); position: relative;
+            border-radius: var(--radius); text-align: left; position: relative;
         }
+        /* 修正: モーダル閉じるボタンの復活 */
         .close-x { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #ccc; cursor: pointer; font-weight: bold; }
     </style>
 </head>
@@ -151,41 +164,42 @@
         <h1>READABLE</h1>
         <a href="https://afrorakda.github.io/" class="hub-link">🏠 Hub</a>
     </header>
+    <p class="subtitle">Individual accessibility check.</p>
 
     <div class="input-card">
         <label class="label">Background HEX</label>
         <div class="input-wrapper">
-            <input type="text" id="hexInput" placeholder="#FF00FF" maxlength="7" oninput="update()">
-            <button class="clr-btn" id="clrBtn" onclick="clr()">×</button>
+            <input type="text" id="hexInput" placeholder="#FF00FF" maxlength="7" oninput="updateUI()">
+            <button class="clr-btn" id="clrBtn" onclick="clearInput()">×</button>
         </div>
     </div>
 
-    <div class="preview-board" id="board" onclick="copy()">
-        <span id="label">READY</span>
+    <div class="preview-board" id="board" onclick="copyHex()">
+        <span id="mainLabel">READY</span>
     </div>
 
-    <p style="font-size:0.85rem;font-weight:900;margin-top:5px;">COLOR BLIND PREVIEW</p>
-    <div class="sim-stack">
-        <div class="sim-card" id="sP"><span style="font-size:0.75rem;opacity:0.6;">P-type</span><span id="rP"></span></div>
-        <div class="sim-card" id="sD"><span style="font-size:0.75rem;opacity:0.6;">D-type</span><span id="rD"></span></div>
-        <div class="sim-card" id="sT"><span style="font-size:0.75rem;opacity:0.6;">T-type</span><span id="rT"></span></div>
+    <div class="sim-label">COLOR BLIND PREVIEW</div>
+    <div class="simulation-stack">
+        <div class="sim-card" id="simP"><span class="sim-type">P-type</span><span class="sim-result" id="resP"></span></div>
+        <div class="sim-card" id="simD"><span class="sim-type">D-type</span><span class="sim-result" id="resD"></span></div>
+        <div class="sim-card" id="simT"><span class="sim-type">T-type</span><span class="sim-result" id="resT"></span></div>
     </div>
 
     <div class="footer-btns">
         <a href="https://ko-fi.com/afrorakda" target="_blank" class="kofi-btn">☕️ buy me a coffee</a>
-        <button class="home-btn" onclick="openM()">Add Home</button>
+        <button class="home-btn" onclick="showModal()">Add Home</button>
     </div>
 
-    <footer>
+    <footer id="dynamicFooter">
         No login / No tracking / No ads / Browser only<br>
         <a href="https://afrorakda.com/privacy/">Privacy Policy</a> / afrorakda © 2026
     </footer>
 </div>
 
-<div id="modal" onclick="closeM()">
+<div id="modal" onclick="hideModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <span class="close-x" onclick="closeM()">×</span>
-        <h3 style="margin-bottom:15px; font-weight: 900;">📱 Install</h3>
+        <span class="close-x" onclick="hideModal()">×</span>
+        <h3 style="margin-bottom: 15px; font-weight: 900;">📱 Install</h3>
         <p style="font-size: 0.9rem; line-height: 1.6; font-weight: 700;">
             🍏 <strong>iPhone:</strong><br>Share > Add to Home Screen<br><br>
             🤖 <strong>Android:</strong><br>Menu (⋮) > Add to Home Screen
@@ -197,24 +211,23 @@
     const input = document.getElementById('hexInput');
     const clrBtn = document.getElementById('clrBtn');
     const board = document.getElementById('board');
-    const label = document.getElementById('label');
+    const label = document.getElementById('mainLabel');
 
-    function clr() { input.value = ''; update(); input.focus(); }
-    function openM() { document.getElementById('modal').style.display = 'flex'; }
-    function closeM() { document.getElementById('modal').style.display = 'none'; }
+    function clearInput() { input.value = ''; updateUI(); input.focus(); }
 
-    function update() {
+    function updateUI() {
         let v = input.value.trim().replace('#', '');
-        clrBtn.style.display = v !== '' ? 'flex' : 'none';
+        clrBtn.style.display = (v !== '') ? 'flex' : 'none';
         if (v.length !== 6) return;
 
         const r = parseInt(v.slice(0, 2), 16), g = parseInt(v.slice(2, 4), 16), b = parseInt(v.slice(4, 6), 16);
-        
+        const rl = Math.pow(r/255, 2.2), gl = Math.pow(g/255, 2.2), bl = Math.pow(b/255, 2.2);
+
         // メイン反映
         const l = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
         board.style.backgroundColor = '#' + v;
-        label.style.color = l < 0.5 ? '#fff' : '#000';
-        label.innerText = l < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
+        label.style.color = (l < 0.5) ? '#fff' : '#000';
+        label.innerText = (l < 0.5) ? 'WHITE ✅' : 'BLACK ✅';
 
         // シミュレーション実行用内部関数
         const runSim = (cardId, resId, sr, sg, sb) => {
@@ -230,24 +243,37 @@
             res.innerText = sl < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
         };
 
-        // P/D/T 本格マトリクス演算
-        // P-type: 赤錐体欠落
-        runSim('sP', 'rP', r*0.566 + g*0.433, r*0.558 + g*0.441, g*0.241 + b*0.758);
-        // D-type: 緑錐体欠落
-        runSim('sD', 'rD', r*0.625 + g*0.375, r*0.7 + g*0.3, g*0.3 + b*0.7);
-        // T-type: 青錐体欠落
-        runSim('sT', 'rT', r, g, 0);
+        const gmp = (c) => Math.round(255 * Math.pow(Math.max(0, Math.min(1, c)), 1/2.2));
+
+        // P-type 高精度マトリクス
+        const pr = 0.56667 * rl + 0.43333 * gl;
+        const pg = 0.55833 * rl + 0.44167 * gl;
+        const pb = 0.24167 * gl + 0.75833 * bl;
+        runSim('simP', 'resP', gmp(pr), gmp(pg), gmp(pb));
+
+        // D-type 高精度マトリクス
+        const dr = 0.625 * rl + 0.375 * gl;
+        const dg = 0.7 * rl + 0.3 * gl;
+        const db = 0.3 * gl + 0.7 * bl;
+        runSim('simD', 'resD', gmp(dr), gmp(dg), gmp(db));
+
+        // T-type (Blue cut)
+        runSim('simT', 'resT', r, g, 0);
     }
 
-    async function copy() {
+    async function copyHex() {
         let v = input.value.trim(); if (!v) return;
         if (!v.startsWith('#')) v = '#' + v;
         await navigator.clipboard.writeText(v.toUpperCase());
-        const old = label.innerText; label.innerText = "COPIED!";
-        setTimeout(() => { label.innerText = old; }, 800);
+        const original = label.innerText; label.innerText = "COPIED!";
+        setTimeout(() => { label.innerText = original; }, 800);
     }
 
-    update();
+    function showModal() { document.getElementById('modal').style.display = 'flex'; }
+    function hideModal() { document.getElementById('modal').style.display = 'none'; }
+
+    // 初期実行
+    updateUI();
 </script>
 
 </body>
