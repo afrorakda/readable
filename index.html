@@ -109,6 +109,15 @@
         }
         .preview-board:active { transform: scale(0.98); }
 
+        .disclaimer {
+            font-size: 0.65rem;
+            color: #999;
+            font-weight: 700;
+            text-align: center;
+            margin-top: -5px;
+            line-height: 1.2;
+        }
+
         .sim-label { font-size: 0.85rem; font-weight: 900; color: var(--main); margin-top: 5px; }
 
         .simulation-stack { display: flex; flex-direction: column; gap: 10px; }
@@ -164,6 +173,7 @@
     <div class="preview-board" id="board" onclick="copyHex()">
         <span id="mainLabel">READY</span>
     </div>
+    <p class="disclaimer">Approximate simulation for design reference only.</p>
 
     <div class="sim-label">COLOR BLIND PREVIEW</div>
     <div class="simulation-stack">
@@ -200,7 +210,6 @@
     const board = document.getElementById('board');
     const label = document.getElementById('mainLabel');
 
-    // 視覚的精査に基づく補正済み行列
     const matrices = {
         P: [0.56667, 0.43333, 0, 0.55833, 0.44167, 0, 0, 0.24167, 0.75833],
         D: [0.625, 0.375, 0, 0.7, 0.3, 0, 0, 0.3, 0.7],
@@ -228,7 +237,6 @@
     }
 
     function runSim(cardId, resId, r, g, b, m) {
-        // 画像精査に基づき、RGBへの直接適用ロジックへ修正
         const sr = r * m[0] + g * m[1] + b * m[2];
         const sg = r * m[3] + g * m[4] + b * m[5];
         const sb = r * m[6] + g * m[7] + b * m[8];
