@@ -18,7 +18,6 @@
             --text-gray: #666;
         }
 
-        /* 憲法: 全要素 15px角丸 / iOS Safari対策 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
 
         body {
@@ -93,10 +92,8 @@
             -webkit-text-fill-color: var(--main) !important;
             opacity: 1 !important;
         }
-        /* 修正: 透かしの色を適切に薄く */
-        input::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; opacity: 0.6 !important; }
+        input::placeholder { color: #bbb !important; -webkit-text-fill-color: #bbb !important; opacity: 1 !important; }
 
-        /* 修正: クリアボタンの位置調整 */
         .clr-btn {
             position: absolute; right: 12px; width: 34px; height: 34px; background: #ccc;
             border: none; border-radius: 50%; color: #fff; font-size: 1.2rem; font-weight: 900;
@@ -127,7 +124,7 @@
         .sim-card {
             width: 100%; height: 75px; padding: 0 20px; border-radius: var(--radius);
             font-weight: 800; display: flex; align-items: center; justify-content: space-between;
-            border: 2px solid var(--accent); transition: background 0.2s, color 0.2s;
+            border: 2px solid var(--accent);
         }
         .sim-type { font-size: 0.75rem; font-weight: 900; opacity: 0.6; }
         .sim-result { font-weight: 900; font-size: 1rem; }
@@ -141,7 +138,6 @@
         .kofi-btn { background: var(--main); color: #fff; -webkit-text-fill-color: #fff; }
         .home-btn { background: var(--accent); color: var(--main); }
 
-        /* 鉄壁フッター（聖域ロジック） */
         footer { text-align: center; font-size: 0.75rem; color: #999; line-height: 1.6; font-weight: 700; margin-top: 10px; }
         footer a { color: inherit; text-decoration: underline; }
 
@@ -153,7 +149,6 @@
             background: #fff; width: 90%; max-width: 340px; padding: 35px;
             border-radius: var(--radius); text-align: left; position: relative;
         }
-        /* 修正: モーダル閉じるボタンの復活 */
         .close-x { position: absolute; top: 15px; right: 20px; font-size: 24px; color: #ccc; cursor: pointer; font-weight: bold; }
     </style>
 </head>
@@ -180,9 +175,9 @@
 
     <div class="sim-label">COLOR BLIND PREVIEW</div>
     <div class="simulation-stack">
-        <div class="sim-card" id="simP"><span class="sim-type">P-type</span><span class="sim-result" id="resP"></span></div>
-        <div class="sim-card" id="simD"><span class="sim-type">D-type</span><span class="sim-result" id="resD"></span></div>
-        <div class="sim-card" id="simT"><span class="sim-type">T-type</span><span class="sim-result" id="resT"></span></div>
+        <div class="sim-card" id="simP"><span class="sim-type">P-type (Red)</span><span class="sim-result" id="resP"></span></div>
+        <div class="sim-card" id="simD"><span class="sim-type">D-type (Green)</span><span class="sim-result" id="resD"></span></div>
+        <div class="sim-card" id="simT"><span class="sim-type">T-type (Blue)</span><span class="sim-result" id="resT"></span></div>
     </div>
 
     <div class="footer-btns">
@@ -190,7 +185,7 @@
         <button class="home-btn" onclick="showModal()">Add Home</button>
     </div>
 
-    <footer id="dynamicFooter">
+    <footer>
         No login / No tracking / No ads / Browser only<br>
         <a href="https://afrorakda.com/privacy/">Privacy Policy</a> / afrorakda © 2026
     </footer>
@@ -213,6 +208,12 @@
     const board = document.getElementById('board');
     const label = document.getElementById('mainLabel');
 
+    const matrices = {
+        P: [0.170556992, 0.829443008, 0, 0.170556992, 0.829443008, 0, -0.004517144, 0.004517144, 1],
+        D: [0.33066007, 0.66933993, 0, 0.33066007, 0.66933993, 0, -0.02785538, 0.02785538, 1],
+        T: [1, 0.1273989, -0.1273989, 0, 0.8739093, 0.1260907, 0, 0.8739093, 0.1260907]
+    };
+
     function clearInput() { input.value = ''; updateUI(); input.focus(); }
 
     function updateUI() {
@@ -221,44 +222,42 @@
         if (v.length !== 6) return;
 
         const r = parseInt(v.slice(0, 2), 16), g = parseInt(v.slice(2, 4), 16), b = parseInt(v.slice(4, 6), 16);
-        const rl = Math.pow(r/255, 2.2), gl = Math.pow(g/255, 2.2), bl = Math.pow(b/255, 2.2);
-
+        
         // メイン反映
-        const l = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
         board.style.backgroundColor = '#' + v;
-        label.style.color = (l < 0.5) ? '#fff' : '#000';
+        const l = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+        label.style.color = (l < 0.5) ? '#fff' : '#333';
         label.innerText = (l < 0.5) ? 'WHITE ✅' : 'BLACK ✅';
 
-        // シミュレーション実行用内部関数
-        const runSim = (cardId, resId, sr, sg, sb) => {
-            const el = document.getElementById(cardId);
-            const res = document.getElementById(resId);
-            const cr = Math.max(0, Math.min(255, Math.round(sr)));
-            const cg = Math.max(0, Math.min(255, Math.round(sg)));
-            const cb = Math.max(0, Math.min(255, Math.round(sb)));
-            
-            el.style.backgroundColor = `rgb(${cr},${cg},${cb})`;
-            const sl = (0.299 * cr + 0.587 * cg + 0.114 * cb) / 255;
-            el.style.color = sl < 0.5 ? '#fff' : '#000';
-            res.innerText = sl < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
-        };
+        // シミュレーション実行
+        runSim('simP', 'resP', r, g, b, matrices.P);
+        runSim('simD', 'resD', r, g, b, matrices.D);
+        runSim('simT', 'resT', r, g, b, matrices.T);
+    }
 
-        const gmp = (c) => Math.round(255 * Math.pow(Math.max(0, Math.min(1, c)), 1/2.2));
+    function runSim(cardId, resId, r, g, b, m) {
+        // 1. ガンマ解除 (Linearize)
+        const lin = (c) => (c /= 255) <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+        const lr = lin(r), lg = lin(g), lb = lin(b);
 
-        // P-type 高精度マトリクス
-        const pr = 0.56667 * rl + 0.43333 * gl;
-        const pg = 0.55833 * rl + 0.44167 * gl;
-        const pb = 0.24167 * gl + 0.75833 * bl;
-        runSim('simP', 'resP', gmp(pr), gmp(pg), gmp(pb));
+        // 2. 行列演算 (Simulate)
+        const sr = lr * m[0] + lg * m[1] + lb * m[2];
+        const sg = lr * m[3] + lg * m[4] + lb * m[5];
+        const sb = lr * m[6] + lg * m[7] + lb * m[8];
 
-        // D-type 高精度マトリクス
-        const dr = 0.625 * rl + 0.375 * gl;
-        const dg = 0.7 * rl + 0.3 * gl;
-        const db = 0.3 * gl + 0.7 * bl;
-        runSim('simD', 'resD', gmp(dr), gmp(dg), gmp(db));
+        // 3. ガンマ再適用 (Reverse Gamma)
+        const rev = (c) => 255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1/2.4) - 0.055);
+        const cr = Math.max(0, Math.min(255, Math.round(rev(sr))));
+        const cg = Math.max(0, Math.min(255, Math.round(rev(sg))));
+        const cb = Math.max(0, Math.min(255, Math.round(rev(sb))));
 
-        // T-type (Blue cut)
-        runSim('simT', 'resT', r, g, 0);
+        const el = document.getElementById(cardId);
+        const res = document.getElementById(resId);
+        el.style.backgroundColor = `rgb(${cr},${cg},${cb})`;
+        
+        const sl = (0.2126 * cr + 0.7152 * cg + 0.0722 * cb) / 255;
+        el.style.color = sl < 0.5 ? '#fff' : '#333';
+        res.innerText = sl < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
     }
 
     async function copyHex() {
@@ -272,7 +271,6 @@
     function showModal() { document.getElementById('modal').style.display = 'flex'; }
     function hideModal() { document.getElementById('modal').style.display = 'none'; }
 
-    // 初期実行
     updateUI();
 </script>
 
