@@ -18,7 +18,6 @@
             --text-gray: #666;
         }
 
-        /* 憲法: 全要素 15px角丸 / iOS Safari対策 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
 
         body {
@@ -103,18 +102,10 @@
         .clr-btn.active { display: flex; }
 
         .preview-board {
-            width: 100%;
-            height: 180px;
-            border-radius: var(--radius);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            border: 2px solid var(--accent);
-            cursor: pointer;
-            position: relative;
-            font-weight: 900;
-            font-size: 2.5rem;
-            transition: transform 0.1s;
+            width: 100%; height: 180px; border-radius: var(--radius);
+            display: flex; justify-content: center; align-items: center;
+            border: 2px solid var(--accent); cursor: pointer; position: relative;
+            font-weight: 900; font-size: 2.5rem; transition: transform 0.1s;
         }
         .preview-board:active { transform: scale(0.98); }
 
@@ -139,7 +130,6 @@
         .kofi-btn { background: var(--main); color: #fff; -webkit-text-fill-color: #fff; }
         .home-btn { background: var(--accent); color: var(--main); }
 
-        /* 鉄壁フッター（聖域ロジック） */
         footer { text-align: center; font-size: 0.75rem; color: #999; line-height: 1.6; font-weight: 700; margin-top: 10px; }
         footer a { color: inherit; text-decoration: underline; }
 
@@ -210,46 +200,46 @@
     const board = document.getElementById('board');
     const label = document.getElementById('mainLabel');
 
-    // Machado et al. 2009 Matrices
+    // Machado et al. 2009 Unified Model Matrices (Severity 1.0)
     const matrices = {
-        P: [0.170557, 0.829443, 0.0, 0.170557, 0.829443, 0.0, -0.004517, 0.004517, 1.0],
-        D: [0.33066, 0.66934, 0.0, 0.33066, 0.66934, 0.0, -0.027855, 0.027855, 1.0],
-        T: [1.0, 0.127399, -0.127399, 0.0, 0.873909, 0.126091, 0.0, 0.873909, 0.126091]
+        P: [0.152286, 1.052583, -0.204868, 0.114503, 0.786281, 0.099216, -0.003882, -0.048116, 1.051998],
+        D: [0.367322, 0.860646, -0.227968, 0.280085, 0.672501, 0.047413, -0.011820, 0.042940, 0.968881],
+        T: [1.016395, 0.054713, -0.071108, 0.006014, 0.927475, 0.066511, -0.003065, 0.395750, 0.607315]
     };
 
     function clearInput() { input.value = ''; updateUI(); input.focus(); }
 
     function updateUI() {
         let v = input.value.trim().replace('#', '');
-        clrBtn.classList.toggle('active', v !== '');
+        clrBtn.style.display = (v !== '') ? 'flex' : 'none';
         
         if (v.length !== 6) return;
         const r = parseInt(v.slice(0, 2), 16), g = parseInt(v.slice(2, 4), 16), b = parseInt(v.slice(4, 6), 16);
         if (isNaN(r) || isNaN(g) || isNaN(b)) return;
 
-        // メイン反映
+        // Main Preview
         board.style.backgroundColor = '#' + v;
         const l = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
         label.style.color = (l < 0.5) ? '#fff' : '#333';
         label.innerText = (l < 0.5) ? 'WHITE ✅' : 'BLACK ✅';
 
-        // 各シミュレーション実行
+        // Simulation runs
         runSim('simP', 'resP', r, g, b, matrices.P);
         runSim('simD', 'resD', r, g, b, matrices.D);
         runSim('simT', 'resT', r, g, b, matrices.T);
     }
 
     function runSim(cardId, resId, r, g, b, m) {
-        // 1. Gamma Correction Removal (Linearize RGB)
+        // 1. Linearize sRGB (Remove Gamma)
         const lin = (c) => (c /= 255) <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
         const lr = lin(r), lg = lin(g), lb = lin(b);
 
-        // 2. Matrix Multiplication
-        const sr = lr * m[0] + lg * m[1] + lb * m[2];
-        const sg = lr * m[3] + lg * m[4] + lb * m[5];
-        const sb = lr * m[6] + lg * m[7] + lb * m[8];
+        // 2. Apply Simulation Matrix
+        let sr = lr * m[0] + lg * m[1] + lb * m[2];
+        let sg = lr * m[3] + lg * m[4] + lb * m[5];
+        let sb = lr * m[6] + lg * m[7] + lb * m[8];
 
-        // 3. Re-apply Gamma
+        // 3. Re-apply Gamma (Back to sRGB)
         const rev = (c) => 255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(Math.max(0, c), 1/2.4) - 0.055);
         const cr = Math.max(0, Math.min(255, Math.round(rev(sr))));
         const cg = Math.max(0, Math.min(255, Math.round(rev(sg))));
@@ -259,6 +249,7 @@
         const resText = document.getElementById(resId);
         el.style.backgroundColor = `rgb(${cr},${cg},${cb})`;
         
+        // Perceptual Luminance for Label Contrast
         const sl = (0.2126 * cr + 0.7152 * cg + 0.0722 * cb) / 255;
         el.style.color = sl < 0.5 ? '#fff' : '#333';
         resText.innerText = sl < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
