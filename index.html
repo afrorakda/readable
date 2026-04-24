@@ -200,11 +200,11 @@
     const board = document.getElementById('board');
     const label = document.getElementById('mainLabel');
 
-    // Machado et al. 2009 Unified Model Matrices (Severity 1.0)
+    // 視覚的精査に基づく補正済み行列
     const matrices = {
-        P: [0.152286, 1.052583, -0.204868, 0.114503, 0.786281, 0.099216, -0.003882, -0.048116, 1.051998],
-        D: [0.367322, 0.860646, -0.227968, 0.280085, 0.672501, 0.047413, -0.011820, 0.042940, 0.968881],
-        T: [1.016395, 0.054713, -0.071108, 0.006014, 0.927475, 0.066511, -0.003065, 0.395750, 0.607315]
+        P: [0.56667, 0.43333, 0, 0.55833, 0.44167, 0, 0, 0.24167, 0.75833],
+        D: [0.625, 0.375, 0, 0.7, 0.3, 0, 0, 0.3, 0.7],
+        T: [0.95, 0.05, 0, 0, 0.43333, 0.56667, 0, 0.475, 0.525]
     };
 
     function clearInput() { input.value = ''; updateUI(); input.focus(); }
@@ -217,39 +217,30 @@
         const r = parseInt(v.slice(0, 2), 16), g = parseInt(v.slice(2, 4), 16), b = parseInt(v.slice(4, 6), 16);
         if (isNaN(r) || isNaN(g) || isNaN(b)) return;
 
-        // Main Preview
         board.style.backgroundColor = '#' + v;
         const l = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
         label.style.color = (l < 0.5) ? '#fff' : '#333';
         label.innerText = (l < 0.5) ? 'WHITE ✅' : 'BLACK ✅';
 
-        // Simulation runs
         runSim('simP', 'resP', r, g, b, matrices.P);
         runSim('simD', 'resD', r, g, b, matrices.D);
         runSim('simT', 'resT', r, g, b, matrices.T);
     }
 
     function runSim(cardId, resId, r, g, b, m) {
-        // 1. Linearize sRGB (Remove Gamma)
-        const lin = (c) => (c /= 255) <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
-        const lr = lin(r), lg = lin(g), lb = lin(b);
+        // 画像精査に基づき、RGBへの直接適用ロジックへ修正
+        const sr = r * m[0] + g * m[1] + b * m[2];
+        const sg = r * m[3] + g * m[4] + b * m[5];
+        const sb = r * m[6] + g * m[7] + b * m[8];
 
-        // 2. Apply Simulation Matrix
-        let sr = lr * m[0] + lg * m[1] + lb * m[2];
-        let sg = lr * m[3] + lg * m[4] + lb * m[5];
-        let sb = lr * m[6] + lg * m[7] + lb * m[8];
-
-        // 3. Re-apply Gamma (Back to sRGB)
-        const rev = (c) => 255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(Math.max(0, c), 1/2.4) - 0.055);
-        const cr = Math.max(0, Math.min(255, Math.round(rev(sr))));
-        const cg = Math.max(0, Math.min(255, Math.round(rev(sg))));
-        const cb = Math.max(0, Math.min(255, Math.round(rev(sb))));
+        const cr = Math.max(0, Math.min(255, Math.round(sr)));
+        const cg = Math.max(0, Math.min(255, Math.round(sg)));
+        const cb = Math.max(0, Math.min(255, Math.round(sb)));
 
         const el = document.getElementById(cardId);
         const resText = document.getElementById(resId);
         el.style.backgroundColor = `rgb(${cr},${cg},${cb})`;
         
-        // Perceptual Luminance for Label Contrast
         const sl = (0.2126 * cr + 0.7152 * cg + 0.0722 * cb) / 255;
         el.style.color = sl < 0.5 ? '#fff' : '#333';
         resText.innerText = sl < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
