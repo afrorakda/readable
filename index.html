@@ -18,6 +18,7 @@
             --text-gray: #666;
         }
 
+        /* 憲法: 全要素 15px角丸 / iOS Safari対策 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
 
         body {
@@ -113,7 +114,7 @@
             position: relative;
             font-weight: 900;
             font-size: 2.5rem;
-            transition: transform 0.1s, background 0.2s;
+            transition: transform 0.1s;
         }
         .preview-board:active { transform: scale(0.98); }
 
@@ -138,6 +139,7 @@
         .kofi-btn { background: var(--main); color: #fff; -webkit-text-fill-color: #fff; }
         .home-btn { background: var(--accent); color: var(--main); }
 
+        /* 鉄壁フッター（聖域ロジック） */
         footer { text-align: center; font-size: 0.75rem; color: #999; line-height: 1.6; font-weight: 700; margin-top: 10px; }
         footer a { color: inherit; text-decoration: underline; }
 
@@ -208,56 +210,58 @@
     const board = document.getElementById('board');
     const label = document.getElementById('mainLabel');
 
+    // Machado et al. 2009 Matrices
     const matrices = {
-        P: [0.170556992, 0.829443008, 0, 0.170556992, 0.829443008, 0, -0.004517144, 0.004517144, 1],
-        D: [0.33066007, 0.66933993, 0, 0.33066007, 0.66933993, 0, -0.02785538, 0.02785538, 1],
-        T: [1, 0.1273989, -0.1273989, 0, 0.8739093, 0.1260907, 0, 0.8739093, 0.1260907]
+        P: [0.170557, 0.829443, 0.0, 0.170557, 0.829443, 0.0, -0.004517, 0.004517, 1.0],
+        D: [0.33066, 0.66934, 0.0, 0.33066, 0.66934, 0.0, -0.027855, 0.027855, 1.0],
+        T: [1.0, 0.127399, -0.127399, 0.0, 0.873909, 0.126091, 0.0, 0.873909, 0.126091]
     };
 
     function clearInput() { input.value = ''; updateUI(); input.focus(); }
 
     function updateUI() {
         let v = input.value.trim().replace('#', '');
-        clrBtn.style.display = (v !== '') ? 'flex' : 'none';
-        if (v.length !== 6) return;
-
-        const r = parseInt(v.slice(0, 2), 16), g = parseInt(v.slice(2, 4), 16), b = parseInt(v.slice(4, 6), 16);
+        clrBtn.classList.toggle('active', v !== '');
         
+        if (v.length !== 6) return;
+        const r = parseInt(v.slice(0, 2), 16), g = parseInt(v.slice(2, 4), 16), b = parseInt(v.slice(4, 6), 16);
+        if (isNaN(r) || isNaN(g) || isNaN(b)) return;
+
         // メイン反映
         board.style.backgroundColor = '#' + v;
         const l = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
         label.style.color = (l < 0.5) ? '#fff' : '#333';
         label.innerText = (l < 0.5) ? 'WHITE ✅' : 'BLACK ✅';
 
-        // シミュレーション実行
+        // 各シミュレーション実行
         runSim('simP', 'resP', r, g, b, matrices.P);
         runSim('simD', 'resD', r, g, b, matrices.D);
         runSim('simT', 'resT', r, g, b, matrices.T);
     }
 
     function runSim(cardId, resId, r, g, b, m) {
-        // 1. ガンマ解除 (Linearize)
+        // 1. Gamma Correction Removal (Linearize RGB)
         const lin = (c) => (c /= 255) <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
         const lr = lin(r), lg = lin(g), lb = lin(b);
 
-        // 2. 行列演算 (Simulate)
+        // 2. Matrix Multiplication
         const sr = lr * m[0] + lg * m[1] + lb * m[2];
         const sg = lr * m[3] + lg * m[4] + lb * m[5];
         const sb = lr * m[6] + lg * m[7] + lb * m[8];
 
-        // 3. ガンマ再適用 (Reverse Gamma)
-        const rev = (c) => 255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1/2.4) - 0.055);
+        // 3. Re-apply Gamma
+        const rev = (c) => 255 * (c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(Math.max(0, c), 1/2.4) - 0.055);
         const cr = Math.max(0, Math.min(255, Math.round(rev(sr))));
         const cg = Math.max(0, Math.min(255, Math.round(rev(sg))));
         const cb = Math.max(0, Math.min(255, Math.round(rev(sb))));
 
         const el = document.getElementById(cardId);
-        const res = document.getElementById(resId);
+        const resText = document.getElementById(resId);
         el.style.backgroundColor = `rgb(${cr},${cg},${cb})`;
         
         const sl = (0.2126 * cr + 0.7152 * cg + 0.0722 * cb) / 255;
         el.style.color = sl < 0.5 ? '#fff' : '#333';
-        res.innerText = sl < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
+        resText.innerText = sl < 0.5 ? 'WHITE ✅' : 'BLACK ✅';
     }
 
     async function copyHex() {
