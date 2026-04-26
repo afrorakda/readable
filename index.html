@@ -18,6 +18,7 @@
             --text-gray: #666;
         }
 
+        /* 憲法遵守: 角丸15px / iOS Safari対策 */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
 
         body {
@@ -99,7 +100,6 @@
             border: none; border-radius: 50%; color: #fff; font-size: 1.2rem; font-weight: 900;
             cursor: pointer; display: none; align-items: center; justify-content: center; z-index: 10;
         }
-        .clr-btn.active { display: flex; }
 
         .preview-board {
             width: 100%; height: 180px; border-radius: var(--radius);
@@ -130,16 +130,19 @@
         .sim-type { font-size: 0.75rem; font-weight: 900; opacity: 0.6; }
         .sim-result { font-weight: 900; font-size: 1rem; }
 
-        .footer-btns { display: flex; gap: 10px; margin-top: 5px; }
-        .kofi-btn, .home-btn {
-            flex: 1; height: 54px; border-radius: var(--radius); display: flex;
-            align-items: center; justify-content: center; text-decoration: none;
-            font-weight: 900; font-size: 0.9rem; cursor: pointer; border: none;
+        .footer-btns { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .kofi-btn {
+            background: var(--main); color: #fff; text-decoration: none;
+            padding: 16px; border-radius: var(--radius); text-align: center;
+            font-weight: 900; font-size: 0.9rem; -webkit-text-fill-color: #fff;
         }
-        .kofi-btn { background: var(--main); color: #fff; -webkit-text-fill-color: #fff; }
-        .home-btn { background: var(--accent); color: var(--main); }
+        .home-btn {
+            background: var(--accent); color: var(--main); border: none;
+            padding: 12px; border-radius: var(--radius); font-weight: 800; font-size: 0.8rem; cursor: pointer;
+        }
 
-        footer { text-align: center; font-size: 0.75rem; color: #999; line-height: 1.6; font-weight: 700; margin-top: 10px; }
+        /* 鉄壁フッター（聖域） */
+        footer { text-align: center; font-size: 0.75rem; color: #999; line-height: 1.6; font-weight: 700; margin-top: 15px; }
         footer a { color: inherit; text-decoration: underline; }
 
         #modal {
@@ -183,21 +186,21 @@
     </div>
 
     <div class="footer-btns">
-        <a href="https://ko-fi.com/afrorakda" target="_blank" class="kofi-btn">☕️ buy me a coffee</a>
-        <button class="home-btn" onclick="showModal()">Add Home</button>
+        <a id="kofi-link" href="https://ko-fi.com/afrorakda" target="_blank" class="kofi-btn">☕️ buy me a coffee</a>
+        <button class="home-btn" onclick="showModal()">Add to Home Screen</button>
     </div>
 
     <footer>
-        No login / No tracking / No ads / Browser only<br>
-        <a href="https://afrorakda.com/privacy/">Privacy Policy</a> / afrorakda © 2026
+        <span id="footer-text">No login / No tracking / No ads / Browser only</span><br>
+        <a id="privacy-link" href="https://afrorakda.com/privacy/">Privacy Policy</a> / <span id="copyright">afrorakda © 2026</span>
     </footer>
 </div>
 
 <div id="modal" onclick="hideModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
         <span class="close-x" onclick="hideModal()">×</span>
-        <h3 style="margin-bottom: 15px; font-weight: 900;">📱 Install</h3>
-        <p style="font-size: 0.9rem; line-height: 1.6; font-weight: 700;">
+        <h3 id="modal-title" style="margin-bottom: 15px; font-weight: 900;">📱 Install</h3>
+        <p id="modal-body" style="font-size: 0.9rem; line-height: 1.6; font-weight: 700;">
             🍏 <strong>iPhone:</strong><br>Share > Add to Home Screen<br><br>
             🤖 <strong>Android:</strong><br>Menu (⋮) > Add to Home Screen
         </p>
@@ -257,14 +260,33 @@
     async function copyHex() {
         let v = input.value.trim(); if (!v) return;
         if (!v.startsWith('#')) v = '#' + v;
-        await navigator.clipboard.writeText(v.toUpperCase());
-        const original = label.innerText; label.innerText = "COPIED!";
-        setTimeout(() => { label.innerText = original; }, 800);
+        try {
+            await navigator.clipboard.writeText(v.toUpperCase());
+            const original = label.innerText; label.innerText = "COPIED!";
+            setTimeout(() => { label.innerText = original; }, 800);
+        } catch (err) {}
     }
 
     function showModal() { document.getElementById('modal').style.display = 'flex'; }
     function hideModal() { document.getElementById('modal').style.display = 'none'; }
 
+    // 鉄壁ロジック: 削除厳禁・聖域
+    async function loadFooter() {
+        try {
+            const response = await fetch('footer.json');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.footerText) document.getElementById('footer-text').innerText = data.footerText;
+                if (data.privacyLink) document.getElementById('privacy-link').href = data.privacyLink;
+                if (data.copyright) document.getElementById('copyright').innerText = data.copyright;
+                if (data.kofiText) document.getElementById('kofi-link').innerText = data.kofiText;
+                if (data.modalTitle) document.getElementById('modal-title').innerText = data.modalTitle;
+                if (data.modalBody) document.getElementById('modal-body').innerHTML = data.modalBody;
+            }
+        } catch (e) { console.log("Static footer active."); }
+    }
+
+    loadFooter();
     updateUI();
 </script>
 
